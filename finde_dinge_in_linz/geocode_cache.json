@@ -1,0 +1,80 @@
+{
+  "pulvermuhlpark linz oberoesterreich": {
+    "lat": 48.3328389,
+    "lon": 14.3011445,
+    "display_name": "Pulvermühlpark, St. Magdalena, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "grunmarkt linz oberoesterreich": {
+    "lat": 48.3113496,
+    "lon": 14.2810849,
+    "display_name": "Grünmarkt, Harbach, Urfahr, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "ottensheimer strasse linz oberoesterreich": {
+    "lat": 48.3090276,
+    "lon": 14.2815772,
+    "display_name": "Ottensheimer Straße, Alt-Urfahr, Urfahr, Linz, Oberösterreich, 4040, Österreich",
+    "source": "nominatim"
+  },
+  "harbachpark linz oberoesterreich": {
+    "lat": 48.3300039,
+    "lon": 14.285831,
+    "display_name": "Harbachpark, Harbach, Urfahr, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "arboretum freinberg linz oberoesterreich": {
+    "lat": 48.2928717,
+    "lon": 14.2676691,
+    "display_name": "Arboretum, Freinberg, Froschberg, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "postlingberg linz oberoesterreich": {
+    "lat": 48.324191,
+    "lon": 14.2579887,
+    "display_name": "Pöstlingberg, Linz, Oberösterreich, 4040, Österreich",
+    "source": "nominatim"
+  },
+  "europaschule linz oberoesterreich": {
+    "lat": 48.3094185,
+    "lon": 14.297346,
+    "display_name": "Europaschule, Innere Stadt, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "posthof linz oberoesterreich": {
+    "lat": 48.3117206,
+    "lon": 14.3116567,
+    "display_name": "Posthof, 43, Posthofstraße, Katzenau, Kaplanhof, Linz, Oberösterreich, 4020, Österreich",
+    "source": "nominatim"
+  },
+  "lowenfeldpark linz oberoesterreich": {
+    "lat": 48.2548848,
+    "lon": 14.3158486,
+    "display_name": "Löwenfeldpark, Kleinmünchen, Kleinmünchen-Auwiesen, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "kudlichstrasse 13 linz oberoesterreich": {
+    "lat": 48.2851417,
+    "lon": 14.2836517,
+    "display_name": "13, Kudlichstraße, Römerberg, Froschberg, Linz, Oberösterreich, 4020, Österreich",
+    "source": "nominatim"
+  },
+  "winklerwald linz oberoesterreich": {
+    "lat": 48.2836766,
+    "lon": 14.2770967,
+    "display_name": "Winklerwald, Froschberg, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "volksgarten linz oberoesterreich": {
+    "lat": 48.2948551,
+    "lon": 14.2918951,
+    "display_name": "Volksgarten, Innere Stadt, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  },
+  "bindermichlpark linz oberoesterreich": {
+    "lat": 48.2690764,
+    "lon": 14.2959575,
+    "display_name": "Bellevuepark, Neue Welt, Spallerhof, Linz, Oberösterreich, Österreich",
+    "source": "nominatim"
+  }
+}

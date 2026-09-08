@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f1f1b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Finde Dinge in Linz</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background-shape background-shape-a"></div>
+    <div class="background-shape background-shape-b"></div>
+
+    <div class="app-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Linz live durchsuchen</p>
+          <h1>Finde Dinge in Linz</h1>
+          <p class="lead">
+            Suche nach Bäumen, Defibrillatoren, Hundezonen oder Hecken und erhalte
+            automatisch die Route von deinem Standort.
+          </p>
+        </div>
+        <div class="hero-badge">
+          <span>OpenStreetMap</span>
+          <span>OSRM Route</span>
+          <span>Browser-Standort</span>
+        </div>
+      </header>
+
+      <section class="search-panel">
+        <form id="search-form" class="search-form">
+          <label class="search-label" for="search-input">Wonach suchst du?</label>
+          <div class="search-row">
+            <input
+              id="search-input"
+              name="query"
+              type="search"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="z.B. birke, eiche, defi, himbeere"
+            />
+            <button type="submit" class="primary-button">Suchen</button>
+          </div>
+        </form>
+
+        <div class="quick-searches" aria-label="Schnellsuche">
+          <button class="chip" data-query="birke">Birke</button>
+          <button class="chip" data-query="eiche">Eiche</button>
+          <button class="chip" data-query="defi">Defi</button>
+          <button class="chip" data-query="himbeere">Himbeere</button>
+          <button class="chip" data-query="hundezone">Hundezone</button>
+        </div>
+
+        <div class="status-row">
+          <div id="status" class="status-pill">Standort wird angefragt ...</div>
+          <button id="location-button" class="secondary-button" type="button">
+            Standort neu holen
+          </button>
+        </div>
+      </section>
+
+      <main class="workspace">
+        <aside class="sidebar">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Treffer</p>
+                <h2 id="result-title">Warte auf Suche</h2>
+              </div>
+              <div id="result-count" class="panel-count">0</div>
+            </div>
+            <div id="results" class="results-list"></div>
+          </section>
+
+          <section class="panel panel-details">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Auswahl</p>
+                <h2 id="detail-title">Noch nichts gewählt</h2>
+              </div>
+            </div>
+            <div id="detail-content" class="detail-content">
+              Wähle einen Treffer aus, dann zeige ich Details, Karte und Route.
+            </div>
+          </section>
+        </aside>
+
+        <section class="map-panel">
+          <div id="map"></div>
+          <div class="map-overlays">
+            <div class="legend">
+              <span><i class="legend-dot legend-dot-user"></i> Dein Standort</span>
+              <span><i class="legend-dot legend-dot-route"></i> Route</span>
+              <span><i class="legend-dot legend-dot-tree"></i> Baum</span>
+              <span><i class="legend-dot legend-dot-defi"></i> Defi</span>
+              <span><i class="legend-dot legend-dot-zone"></i> Hundezone</span>
+              <span><i class="legend-dot legend-dot-hedge"></i> Hecke</span>
+            </div>
+            <div id="route-summary" class="route-summary">Noch keine Route berechnet.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
