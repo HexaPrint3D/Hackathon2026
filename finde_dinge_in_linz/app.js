@@ -2,6 +2,8 @@ const state = {
   center: { lat: 48.3069, lon: 14.2858 },
   location: null,
   locationSource: "none",
+  localMode: false,
+  localItems: [],
   results: [],
   selectedId: null,
   detailCache: new Map(),
@@ -299,8 +301,67 @@ async function fetchJson(url) {
   return response.json();
 }
 
+function localNormalize(value) {
+  return String(value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ß/g, "ss")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function localTerms(query) {
+  return query
+    .split(/[,\n;/|]+/)
+    .map(localNormalize)
+    .filter(Boolean);
+}
+
+function localScore(item, terms) {
+  if (!terms.length) return 1;
+  const blob = item.search_blob || "";
+  const title = localNormalize(item.title);
+  const subtitle = localNormalize(item.subtitle);
+  let score = 0;
+  for (const term of terms) {
+    if (blob.includes(term)) {
+      score += title.includes(term) ? 14 : subtitle.includes(term) ? 12 : 10;
+    }
+  }
+  return score;
+}
+
+function localDistance(item) {
+  if (state.locationSource !== "gps" || !state.location || item.lat == null || item.lon == null) {
+    return null;
+  }
+  const toRadians = (value) => (value * Math.PI) / 180;
+  const earthRadius = 6371000;
+  const dLat = toRadians(item.lat - state.location.lat);
+  const dLon = toRadians(item.lon - state.location.lon);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRadians(state.location.lat)) * Math.cos(toRadians(item.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * earthRadius * Math.asin(Math.sqrt(a));
+}
+
+function localSearch(query) {
+  const terms = localTerms(query);
+  return state.localItems
+    .map((item) => ({ ...item, score: localScore(item, terms), distance_m: localDistance(item) }))
+    .filter((item) => !terms.length || item.score > 0)
+    .sort((a, b) => b.score - a.score || (a.distance_m ?? Number.POSITIVE_INFINITY) - (b.distance_m ?? Number.POSITIVE_INFINITY) || a.title.localeCompare(b.title))
+    .slice(0, 40);
+}
+
 async function performSearch(query) {
   const token = ++state.currentSearchToken;
+  if (state.localMode) {
+    const items = localSearch(query);
+    setStatus(`${items.length} Treffer${query ? ` für "${query}"` : ""}`);
+    renderResults(items, query);
+    return;
+  }
   setStatus(`Suche läuft ...`);
   const locationParams = state.locationSource === "gps" && state.location
     ? `&lat=${state.location.lat}&lon=${state.location.lon}`
@@ -329,7 +390,10 @@ async function selectResult(id, options = {}) {
   if (!detail) {
     elements.detailContent.innerHTML = '<div class="detail-empty">Lade Details ...</div>';
     try {
-      detail = await fetchJson(`/api/item?id=${encodeURIComponent(id)}`);
+      detail = state.localMode
+        ? state.localItems.find((item) => item.id === id)
+        : await fetchJson(`/api/item?id=${encodeURIComponent(id)}`);
+      if (!detail) throw new Error("Eintrag nicht gefunden");
       state.detailCache.set(id, detail);
     } catch (error) {
       console.error(error);
@@ -389,10 +453,19 @@ async function drawRouteTo(detail) {
     return;
   }
 
-  const routeUrl = `/api/route?fromLat=${state.location.lat}&fromLon=${state.location.lon}&toLat=${detail.lat}&toLon=${detail.lon}`;
+  const routeUrl = state.localMode
+    ? `https://router.project-osrm.org/route/v1/foot/${state.location.lon},${state.location.lat};${detail.lon},${detail.lat}?overview=full&geometries=geojson`
+    : `/api/route?fromLat=${state.location.lat}&fromLon=${state.location.lon}&toLat=${detail.lat}&toLon=${detail.lon}`;
   try {
     const payload = await fetchJson(routeUrl);
-    const route = payload.route;
+    const route = state.localMode
+      ? {
+          distance_m: payload.routes?.[0]?.distance,
+          duration_s: payload.routes?.[0]?.duration,
+          geometry: payload.routes?.[0]?.geometry?.coordinates || [],
+          source: "OSRM",
+        }
+      : payload.route;
     const coordinates = route.geometry || [];
     layers.route.clearLayers();
 
@@ -507,13 +580,21 @@ async function boot() {
   wireEvents();
   renderDetail(null);
   elements.searchInput.value = "";
-  requestLocation();
   try {
     const config = await fetchJson("/api/config");
     state.center = config.defaultCenter || state.center;
   } catch (error) {
-    console.warn(error);
+    try {
+      const localData = await fetchJson("./data.json");
+      state.localMode = true;
+      state.localItems = localData.items || [];
+      state.center = localData.defaultCenter || state.center;
+      setStatus("Lokale App-Daten geladen.");
+    } catch (localError) {
+      console.warn(localError);
+    }
   }
+  requestLocation();
 }
 
 if ("serviceWorker" in navigator) {

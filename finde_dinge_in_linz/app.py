@@ -689,6 +689,9 @@ class AppHandler(BaseHTTPRequestHandler):
         if path == "/service-worker.js":
             serve_static_file(self, ROOT / "service-worker.js", "application/javascript; charset=utf-8")
             return
+        if path == "/data.json":
+            serve_static_file(self, ROOT / "data.json", "application/json; charset=utf-8")
+            return
         if path == "/icons/icon.svg":
             serve_static_file(self, ROOT / "icons" / "icon.svg", "image/svg+xml")
             return

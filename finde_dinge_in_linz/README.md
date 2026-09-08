@@ -12,7 +12,7 @@ Dann im Browser `http://127.0.0.1:8000` öffnen.
 
 ## Android verwenden
 
-Die App ist als installierbare PWA vorbereitet. Für die Nutzung auf einem Android-Handy:
+Die App ist als installierbare PWA vorbereitet. Zusätzlich gibt es unter `android-app` einen Android-WebView-Wrapper. In diesem Wrapper liegen Frontend, Suchlogik und Daten direkt im APK auf demselben Gerät; ein Python-Server ist auf dem Handy nicht nötig.
 
 1. Starte den Server im lokalen Netzwerk:
 
@@ -24,7 +24,19 @@ python .\finde_dinge_in_linz\app.py --host 0.0.0.0 --port 8000
 3. Im Chrome-Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“ auswählen.
 4. Den Standortzugriff erlauben.
 
-Computer und Handy müssen im selben WLAN sein. Für eine echte, unabhängig laufende APK müsste die Anwendung zusätzlich in einen Android-Wrapper gepackt und die Daten-API online oder direkt in der App eingebaut werden.
+Computer und Handy müssen im selben WLAN sein, wenn du die PWA-Variante verwendest.
+
+## APK bauen
+
+1. Öffne den Ordner `finde_dinge_in_linz/android-app` in Android Studio.
+2. Lass Gradle synchronisieren und starte `app` auf einem Android-Gerät oder Emulator.
+3. Die App fragt beim Start nach der Standortberechtigung. Suche und Datensätze laufen lokal; nur die Kartenkacheln und die optionale Fußroute benötigen Internet.
+
+Die Android-App nutzt die Dateien aus dem übergeordneten `finde_dinge_in_linz`-Ordner direkt als APK-Assets. Wenn sich die CSV-Daten ändern, aktualisiere zuerst die lokale Datei:
+
+```powershell
+python .\finde_dinge_in_linz\export_client_data.py
+```
 
 ## Was die App kann
 
