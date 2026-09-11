@@ -1,0 +1,16 @@
+ID;Bezeichnung;Lage;WGS84-LAT;WGS84-LON;Messverfahren;Datum Inbetriebnahme;Modus
+L032.10.01.3;Nibelungenbruecke, Richtung Sueden;Brueckenkopf Nord;48.3082;14.2849;optische Kamera;2024-01;Fahrrad
+L032.10.02.1;Nibelungenbruecke, Richtung Norden;Brueckenkopf Sued;48.3082;14.2849;optische Kamera;2024-01;Fahrrad
+L050.00.01.3;Eisenbahnbruecke, Richtung Sueden;Brueckenkopf Nord;48.317;14.2958;optische Kamera;2022-05;Fahrrad
+L050.00.02.1;Eisenbahnbruecke, Richtung Norden;Brueckenkopf Nord;48.317;14.2958;optische Kamera;2022-05;Fahrrad
+L020.00.01.3;VOEST Bruecke, Richtung Sueden;Brueckenkopf Nord;48.3194;14.2992;optische Kamera;2022-07;Fahrrad
+L020.00.02.1;VOEST Bruecke, Richtung Norden;Brueckenkopf Nord;48.3194;14.2992;optische Kamera;2022-07;Fahrrad
+L015.20.01.3;Wildbergstrasse, Richtung Sueden;Kreuzung Wildbergstrasse-Reindlstrasse;48.3141;14.2858;optische Kamera;2022-01;Fahrrad
+L015.20.02.1;Wildbergstrasse, Richtung Norden;Kreuzung Wildbergstrasse-Reindlstrasse;48.3141;14.2858;optische Kamera;2022-01;Fahrrad
+L716.30.01.3;Fadingerstrasse, Richtung Sueden;Kreuzung Mozartstrasse-Fadingerstrasse;48.3018;14.2944;optische Kamera;2013-05;Fahrrad
+L716.30.02.1;Fadingerstrasse, Richtung Norden;Kreuzung Mozartstrasse-Fadingerstrasse;48.3018;14.2944;optische Kamera;2013-05;Fahrrad
+L716.80.01.3;Schubertstrasse, Richtung Sueden;Kreuzung Schubertstrasse-Goethestrasse;48.2975;14.2969;Induktionsschleife;2013-05;Fahrrad
+L716.80.02.1;Schubertstrasse, Richtung Norden;Kreuzung Schubertstrasse-Goethestrasse;48.2975;14.2969;Induktionsschleife;2013-05;Fahrrad
+L032.00.01.1;Hauptplatz, Richtung Norden;Kreuzung Hauptplatz-Untere Donaulaende;48.3068;14.2861;optische Kamera;2013-01;Fahrrad
+L315.10.01.1;Wiener Strasse, Richtung Norden;Kreuzung Wiener Strasse-Lunzerstrasse-Zeppelinstrasse;48.2565;14.3219;optische Kamera;2024-01;Fahrrad
+L315.10.02.3;Wiener Strasse, Richtung Sueden;Kreuzung Wiener Strasse-Lunzerstrasse-Zeppelinstrasse;48.2565;14.3219;optische Kamera;2024-01;Fahrrad

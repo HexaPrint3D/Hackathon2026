@@ -1,0 +1,19 @@
+[x] add all essential city needs in Linz: food, supermarkets, bakeries, pharmacies, transit points, visitor info, bicycle rentals, parks, and general practical places
+
+[x] make the festival-selection buttons grow more on hover and feel more responsive
+
+[x] add more layered, calming animations to the landing screen and cards
+
+[x] make that when you plan a transport it shows the route and bus number on the map, using the real departure data from the API
+
+[x] make the festival-selection buttons grow much more on select and polish the search arrow animationtle more complex
+
+add when you ask the ai and put in the code /photospot that it shows you all the photospots in linz and when you type /unspot it hides them again
+
+add a feature when you write /sighhtseeing the ai plans a rout where you come across all the spots you mention after the command
+
+add the code /planroute (where you are), (where you wanna go) and it plans a route to the spot you wanna go and shows the route on the map with a red line
+
+add too that you see a
+
+make the arrow animation 

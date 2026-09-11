@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hund vs. Katzen: Croissant-Madness 🐶🥐🐱</title>
+    <style>
+        body {
+            background-color: #1e272c;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #ui-bar {
+            display: flex;
+            gap: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background-color: #111827; 
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: 2px solid #374151;
+            box-shadow: 0 4px 15px #000000;
+            z-index: 10;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .upgrade-tag {
+            color: #f1c40f;
+        }
+
+        canvas {
+            border: 4px solid #2ed573;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background-color: #2ed573;
+        }
+
+        .controls-hint {
+            margin-top: 10px;
+            color: #bdc3c7;
+            font-size: 14px;
+        }
+
+        /* Deckende Overlays */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background-color: #0d131a; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+        }
+
+        .panel {
+            background-color: #1f2937; 
+            border: 3px solid #374151;
+            border-radius: 24px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 18px 40px #000000;
+            max-width: 450px;
+            width: calc(100% - 32px);
+        }
+
+        .panel h1, .panel h2 {
+            margin: 0 0 12px;
+        }
+
+        .panel p {
+            margin: 0 0 18px;
+            color: #dfe6e9;
+            line-height: 1.5;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffd166, #ff9f1c);
+            color: #1f2933;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 159, 28, 0.45);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 24px rgba(255, 159, 28, 0.5);
+        }
+
+        .upgrade-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .upgrade-card {
+            background-color: #374151; 
+            border: 1px solid #4b5563;
+            padding: 12px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upgrade-card div {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-bar">
+        <div>Baguettes im Beutel: <span id="baguettes-count" style="color:#ffd166;">0</span> 🥖</div>
+        <div>Banked 🥖: <span id="banked-baguettes" style="color:#f39c12;">0</span></div>
+        <div>Leben: <span id="lives">❤️❤️❤️</span></div>
+        <div class="upgrade-tag">⚡ F-Rate: <span id="lvl-firerate">Lvl 1</span></div>
+        <div class="upgrade-tag">💥 Explosion: <span id="lvl-explosion">Lvl 0</span></div>
+        <div class="upgrade-tag">❄️ Eis: <span id="lvl-freeze">Lvl 0</span></div>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="overlay">
+        <div class="panel">
+            <h1>Hund vs. Katzen 🥐</h1>
+            <p>Sammle seltene Baguettes! 🥖<br><br>
+            Drücke <b>SPACE</b> zum Schießen.<br>
+            Achtung: Katzen halten unterschiedlich viele Schüsse aus (2 bis 10)!<br><br>
+            Bring deine Baguettes zum 🏢 AEC, um Upgrades zu kaufen!</p>
+            <button id="start-button" class="btn" type="button">Spiel Starten</button>
+        </div>
+    </div>
+
+    <!-- Upgrade Shop Overlay -->
+    <div id="upgrade-overlay" class="overlay" style="display: none;">
+        <div class="panel">
+            <h2>🏢 AEC Forschungszentrum</h2>
+            <p>Verfügbare Baguettes im AEC: <b id="shop-baguettes" style="color:#ffd166; font-size:1.2rem;">0</b> 🥖</p>
+            
+            <div class="upgrade-grid">
+                <div class="upgrade-card">
+                    <div>
+                        <b>⚡ Feuerrate</b><br>
+                        <small>Schneller schießen</small>
+                    </div>
+                    <button class="btn" onclick="buyUpgrade('fireRate')">Upgrade (<span id="cost-firerate">3</span> 🥖)</button>
+                </div>
+                <div class="upgrade-card">
+                    <div>
+                        <b>💥 Explosion</b><br>
+                        <small>Flächenschaden erzeugen</small>
+                    </div>
+                    <button class="btn" onclick="buyUpgrade('explosion')">Upgrade (<span id="cost-explosion">3</span> 🥖)</button>
+                </div>
+                <div class="upgrade-card">
+                    <div>
+                        <b>❄️ Einfrieren</b><br>
+                        <small>Katzen verlangsamen</small>
+                    </div>
+                    <button class="btn" onclick="buyUpgrade('freeze')">Upgrade (<span id="cost-freeze">3</span> 🥖)</button>
+                </div>
+            </div>
+
+            <button class="btn" style="background:#718093; color:white;" onclick="closeShop()">Weiterkämpfen</button>
+        </div>
+    </div>
+    
+    <div class="controls-hint">
+        Steuerung: <b>WASD/Pfeiltasten</b> zum Bewegen | <b>LEERTASTE (SPACE)</b> zum Schießen!
+    </div>
+<a href="try.html"><button>home</button></a>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        
+        const baguettesElement = document.getElementById("baguettes-count");
+        const bankedBaguettesElement = document.getElementById("banked-baguettes");
+        const livesElement = document.getElementById("lives");
+        const lvlFireRateElem = document.getElementById("lvl-firerate");
+        const lvlExplosionElem = document.getElementById("lvl-explosion");
+        const lvlFreezeElem = document.getElementById("lvl-freeze");
+
+        const startButton = document.getElementById("start-button");
+        const startOverlay = document.getElementById("start-overlay");
+        const upgradeOverlay = document.getElementById("upgrade-overlay");
+        const shopBaguettesElem = document.getElementById("shop-baguettes");
+
+        let collectedBaguettes = 0;
+        let bankedBaguettes = 0;
+
+        // Permanent Upgrade-Levels
+        let fireRateLevel = 1;
+        let explosionLevel = 0;
+        let freezeLevel = 0;
+
+        let lives = 3;
+        let gameOver = false;
+        let gameStarted = false;
+        let shopOpen = false;
+        let canOpenShop = false;
+
+        let invulnerableTimer = 0;
+        let shootCooldown = 0;
+
+        const player = {
+            x: 0,
+            y: 120,
+            radius: 20,
+            baseSpeed: 5,
+            emoji: "🐶",
+            lastDirX: 1,
+            lastDirY: 0
+        };
+
+        const aecBuilding = {
+            x: 0,
+            y: 0,
+            radius: 50,
+            emoji: "🏢"
+        };
+
+        let baguettesOnMap = [];
+        let projectiles = [];
+        let cats = [];
+        let rocks = [];
+        let walls = [];
+        let explosions = [];
+
+        const keys = {};
+        window.addEventListener("keydown", e => { 
+            keys[e.key] = true; 
+            keys[e.code] = true;
+            if (e.code === "Space") e.preventDefault(); // Verhindert Scrollen
+        });
+        window.addEventListener("keyup", e => { 
+            keys[e.key] = false; 
+            keys[e.code] = false; 
+        });
+
+        function getClosestCat() {
+            let closestCat = null;
+            let minDistance = Infinity;
+
+            for (let c of cats) {
+                let dist = Math.hypot(c.x - player.x, c.y - player.y);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestCat = c;
+                }
+            }
+            return { cat: closestCat, distance: minDistance };
+        }
+
+        function shootCroissant() {
+            if (!gameStarted || gameOver || shopOpen || shootCooldown > 0) return;
+
+            let targetX = player.lastDirX;
+            let targetY = player.lastDirY;
+
+            let closest = getClosestCat();
+            if (closest.cat && closest.distance < 650) {
+                let angle = Math.atan2(closest.cat.y - player.y, closest.cat.x - player.x);
+                targetX = Math.cos(angle);
+                targetY = Math.sin(angle);
+            }
+
+            projectiles.push({
+                x: player.x,
+                y: player.y,
+                vx: targetX * 10,
+                vy: targetY * 10,
+                radius: 12,
+                life: 120,
+                emoji: "🥐"
+            });
+
+            // Cooldown basierend auf dem Feuerraten-Upgrade
+            shootCooldown = Math.max(8, 35 - (fireRateLevel - 1) * 5);
+        }
+
+        function pseudoRandom(x, y) {
+            let n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+            return n - Math.floor(n);
+        }
+
+        function checkObstacleCollision(x, y, radius) {
+            for (let r of rocks) {
+                if (Math.hypot(x - r.x, y - r.y) < radius + r.radius) return true;
+            }
+            for (let w of walls) {
+                let closestX = Math.max(w.x, Math.min(x, w.x + w.width));
+                let closestY = Math.max(w.y, Math.min(y, w.y + w.height));
+                let distX = x - closestX;
+                let distY = y - closestY;
+                if ((distX * distX + distY * distY) < (radius * radius)) return true;
+            }
+            return false;
+        }
+
+        function getRandomScreenPosition(minDistanceFromPlayer = 100) {
+            const padding = 50;
+            const minX = player.x - (canvas.width / 2) + padding;
+            const maxX = player.x + (canvas.width / 2) - padding;
+            const minY = player.y - (canvas.height / 2) + padding;
+            const maxY = player.y + (canvas.height / 2) - padding;
+
+            let posX, posY, distToPlayer, collide;
+
+            do {
+                posX = minX + Math.random() * (maxX - minX);
+                posY = minY + Math.random() * (maxY - minY);
+                distToPlayer = Math.hypot(posX - player.x, posY - player.y);
+                collide = checkObstacleCollision(posX, posY, 25);
+            } while (distToPlayer < minDistanceFromPlayer || collide);
+
+            return { x: posX, y: posY };
+        }
+
+        function spawnMapObstacles() {
+            for (let i = 0; i < 70; i++) {
+                let rx = player.x + (Math.random() - 0.5) * 5000;
+                let ry = player.y + (Math.random() - 0.5) * 5000;
+                if (Math.hypot(rx - aecBuilding.x, ry - aecBuilding.y) < 150) continue;
+                rocks.push({ x: rx, y: ry, radius: 22, emoji: "🪨" });
+            }
+
+            for (let i = 0; i < 40; i++) {
+                let wx = player.x + (Math.random() - 0.5) * 5000;
+                let wy = player.y + (Math.random() - 0.5) * 5000;
+                if (Math.hypot(wx - aecBuilding.x, wy - aecBuilding.y) < 250) continue;
+
+                let isHorizontal = Math.random() < 0.5;
+                let length = 3 + Math.floor(Math.random() * 4);
+
+                walls.push({
+                    x: wx, y: wy,
+                    width: isHorizontal ? length * 35 : 35,
+                    height: isHorizontal ? 35 : length * 35,
+                    emoji: "🧱", length: length, isHorizontal: isHorizontal
+                });
+            }
+        }
+
+        function spawnCatInView() {
+            const pos = getRandomScreenPosition(200);
+            
+            // Zufällige HP zwischen 2 und 10 schüssen
+            let randomHp = Math.floor(Math.random() * 9) + 2;
+
+            cats.push({
+                x: pos.x,
+                y: pos.y,
+                radius: 20,
+                hp: randomHp,
+                maxHp: randomHp,
+                speed: 1.8 + Math.random() * 1.5,
+                emoji: "🐱",
+                freezeTimer: 0
+            });
+        }
+
+        function spawnBaguetteInView() {
+            if (baguettesOnMap.length >= 3) return;
+            const pos = getRandomScreenPosition(120);
+            baguettesOnMap.push({ x: pos.x, y: pos.y, radius: 18, emoji: "🥖" });
+        }
+
+        function getUpgradeCost(level) {
+            return 3 + level * 2;
+        }
+
+        function updateShopUI() {
+            shopBaguettesElem.innerText = bankedBaguettes;
+            document.getElementById("cost-firerate").innerText = getUpgradeCost(fireRateLevel - 1);
+            document.getElementById("cost-explosion").innerText = getUpgradeCost(explosionLevel);
+            document.getElementById("cost-freeze").innerText = getUpgradeCost(freezeLevel);
+        }
+
+        function openShop() {
+            if (shopOpen) return;
+            shopOpen = true;
+            updateShopUI();
+            upgradeOverlay.style.display = "flex";
+        }
+
+        function closeShop() {
+            shopOpen = false;
+            canOpenShop = false;
+            upgradeOverlay.style.display = "none";
+        }
+
+        function buyUpgrade(type) {
+            if (type === 'fireRate') {
+                let cost = getUpgradeCost(fireRateLevel - 1);
+                if (bankedBaguettes >= cost) {
+                    bankedBaguettes -= cost;
+                    fireRateLevel++;
+                    lvlFireRateElem.innerText = `Lvl ${fireRateLevel}`;
+                }
+            } else if (type === 'explosion') {
+                let cost = getUpgradeCost(explosionLevel);
+                if (bankedBaguettes >= cost) {
+                    bankedBaguettes -= cost;
+                    explosionLevel++;
+                    lvlExplosionElem.innerText = `Lvl ${explosionLevel}`;
+                }
+            } else if (type === 'freeze') {
+                let cost = getUpgradeCost(freezeLevel);
+                if (bankedBaguettes >= cost) {
+                    bankedBaguettes -= cost;
+                    freezeLevel++;
+                    lvlFreezeElem.innerText = `Lvl ${freezeLevel}`;
+                }
+            }
+            bankedBaguettesElement.innerText = bankedBaguettes;
+            updateShopUI();
+        }
+
+        function initGame() {
+            spawnMapObstacles();
+            spawnBaguetteInView();
+            for (let i = 0; i < 3; i++) spawnCatInView();
+
+            setInterval(() => { if (!gameOver && gameStarted) spawnBaguetteInView(); }, 12000);
+            setInterval(() => { if (!gameOver && gameStarted) spawnCatInView(); }, 4000);
+        }
+
+        function startGame() {
+            if (gameStarted) return;
+            gameStarted = true;
+            startOverlay.style.display = "none";
+            initGame();
+        }
+
+        startButton.addEventListener("click", startGame);
+
+        function update() {
+            if (!gameStarted || gameOver || shopOpen) return;
+
+            if (invulnerableTimer > 0) invulnerableTimer--;
+            if (shootCooldown > 0) shootCooldown--;
+
+            // Schießen per Leertaste
+            if (keys["Space"] || keys[" "]) {
+                shootCroissant();
+            }
+
+            let dx = 0; let dy = 0;
+            let currentSpeed = player.baseSpeed;
+
+            if (keys["ArrowUp"] || keys["w"] || keys["W"]) dy -= currentSpeed;
+            if (keys["ArrowDown"] || keys["s"] || keys["S"]) dy += currentSpeed;
+            if (keys["ArrowLeft"] || keys["a"] || keys["A"]) dx -= currentSpeed;
+            if (keys["ArrowRight"] || keys["d"] || keys["D"]) dx += currentSpeed;
+
+            if (dx !== 0 || dy !== 0) {
+                if (dx !== 0 && dy !== 0) { dx *= 0.7071; dy *= 0.7071; }
+                let len = Math.hypot(dx, dy);
+                player.lastDirX = dx / len; player.lastDirY = dy / len;
+            }
+
+            if (!checkObstacleCollision(player.x + dx, player.y, player.radius)) player.x += dx;
+            if (!checkObstacleCollision(player.x, player.y + dy, player.radius)) player.y += dy;
+
+            // Geschosse verwalten
+            for (let pIndex = projectiles.length - 1; pIndex >= 0; pIndex--) {
+                let p = projectiles[pIndex];
+                p.x += p.vx; p.y += p.vy; p.life--;
+
+                let hitObstacle = checkObstacleCollision(p.x, p.y, p.radius);
+                let hitCat = false;
+
+                for (let cIndex = cats.length - 1; cIndex >= 0; cIndex--) {
+                    let c = cats[cIndex];
+                    if (Math.hypot(p.x - c.x, p.y - c.y) < p.radius + c.radius) {
+                        hitCat = true;
+                        c.hp--;
+
+                        if (freezeLevel > 0) c.freezeTimer = 180;
+
+                        if (explosionLevel > 0) {
+                            let expRadius = 40 + explosionLevel * 15;
+                            explosions.push({ x: p.x, y: p.y, radius: expRadius, timer: 15, maxTimer: 15 });
+                            
+                            for (let otherCat of cats) {
+                                if (otherCat !== c && Math.hypot(p.x - otherCat.x, p.y - otherCat.y) < expRadius) {
+                                    otherCat.hp -= 0.5 * explosionLevel;
+                                    if (freezeLevel > 0) otherCat.freezeTimer = 120;
+                                }
+                            }
+                        }
+
+                        if (c.hp <= 0) {
+                            if (Math.random() < 0.25) {
+                                baguettesOnMap.push({ x: c.x, y: c.y, radius: 18, emoji: "🥖" });
+                            }
+                            cats.splice(cIndex, 1);
+                        }
+                        break;
+                    }
+                }
+
+                if (hitObstacle || hitCat || p.life <= 0) {
+                    projectiles.splice(pIndex, 1);
+                }
+            }
+
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                explosions[i].timer--;
+                if (explosions[i].timer <= 0) explosions.splice(i, 1);
+            }
+
+            // Baguettes einsammeln
+            for (let i = baguettesOnMap.length - 1; i >= 0; i--) {
+                let b = baguettesOnMap[i];
+                if (Math.hypot(player.x - b.x, player.y - b.y) < player.radius + b.radius) {
+                    baguettesOnMap.splice(i, 1);
+                    collectedBaguettes++;
+                    baguettesElement.innerText = collectedBaguettes;
+                }
+            }
+
+            // AEC Gebäude Abfrage
+            let distToAEC = Math.hypot(player.x - aecBuilding.x, player.y - aecBuilding.y);
+            let inAecZone = distToAEC < player.radius + aecBuilding.radius + 15;
+
+            if (inAecZone) {
+                if (canOpenShop) {
+                    if (collectedBaguettes > 0) {
+                        bankedBaguettes += collectedBaguettes;
+                        collectedBaguettes = 0;
+                        baguettesElement.innerText = collectedBaguettes;
+                        bankedBaguettesElement.innerText = bankedBaguettes;
+                    }
+                    openShop();
+                }
+            } else {
+                canOpenShop = true;
+            }
+
+            // Katzen-KI
+            for (let c of cats) {
+                if (c.freezeTimer > 0) c.freezeTimer--;
+                let currentCatSpeed = c.freezeTimer > 0 ? c.speed * 0.3 : c.speed;
+
+                const angle = Math.atan2(player.y - c.y, player.x - c.x);
+                let vx = Math.cos(angle) * currentCatSpeed;
+                let vy = Math.sin(angle) * currentCatSpeed;
+
+                if (checkObstacleCollision(c.x + vx, c.y + vy, c.radius)) {
+                    if (!checkObstacleCollision(c.x + vx, c.y, c.radius)) vy = 0;
+                    else if (!checkObstacleCollision(c.x, c.y + vy, c.radius)) vx = 0;
+                    else { vx = -vx; vy = -vy; }
+                }
+
+                c.x += vx; c.y += vy;
+
+                if (invulnerableTimer === 0 && Math.hypot(player.x - c.x, player.y - c.y) < player.radius + c.radius) {
+                    lives--;
+                    updateLivesUI();
+                    invulnerableTimer = 120;
+                    if (lives <= 0) gameOver = true;
+                }
+            }
+        }
+
+        function updateLivesUI() {
+            livesElement.innerText = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - lives));
+        }
+
+        function drawPointerToAEC() {
+            let distToAEC = Math.hypot(aecBuilding.x - player.x, aecBuilding.y - player.y);
+            if (distToAEC < aecBuilding.radius + 40) return;
+
+            let angle = Math.atan2(aecBuilding.y - player.y, aecBuilding.x - player.x);
+            let distanceOffset = 45;
+
+            let arrowX = canvas.width / 2 + Math.cos(angle) * distanceOffset;
+            let arrowY = canvas.height / 2 + Math.sin(angle) * distanceOffset;
+
+            ctx.save();
+            ctx.translate(arrowX, arrowY);
+            ctx.rotate(angle);
+            ctx.font = "bold 24px serif";
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("➡️", 0, 0);
+            ctx.restore();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!gameStarted) return;
+
+            const offsetX = canvas.width / 2 - player.x;
+            const offsetY = canvas.height / 2 - player.y;
+
+            const tileSize = 100;
+            const startX = Math.floor((player.x - canvas.width / 2) / tileSize) * tileSize;
+            const endX = startX + canvas.width + tileSize * 2;
+            const startY = Math.floor((player.y - canvas.height / 2) / tileSize) * tileSize;
+            const endY = startY + canvas.height + tileSize * 2;
+
+            for (let x = startX; x < endX; x += tileSize) {
+                for (let y = startY; y < endY; y += tileSize) {
+                    const screenX = x + offsetX;
+                    const screenY = y + offsetY;
+                    const val = pseudoRandom(x, y);
+                    ctx.fillStyle = val > 0.5 ? "#2ed573" : "#26af5f";
+                    ctx.fillRect(screenX, screenY, tileSize, tileSize);
+                }
+            }
+
+            function drawEmoji(emoji, x, y, size) {
+                ctx.font = `${size}px serif`;
+                ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.fillText(emoji, x + offsetX, y + offsetY);
+            }
+
+            // Ars Electronica Center
+            ctx.beginPath();
+            ctx.arc(aecBuilding.x + offsetX, aecBuilding.y + offsetY, aecBuilding.radius + 10, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "#2c3e50";
+            ctx.stroke();
+            drawEmoji(aecBuilding.emoji, aecBuilding.x, aecBuilding.y, 65);
+
+            // Wände & Steine
+            for (let w of walls) {
+                for (let i = 0; i < w.length; i++) {
+                    let brickX = w.isHorizontal ? w.x + i * 35 + 17.5 : w.x + 17.5;
+                    let brickY = w.isHorizontal ? w.y + 17.5 : w.y + i * 35 + 17.5;
+                    drawEmoji(w.emoji, brickX, brickY, 32);
+                }
+            }
+            for (let r of rocks) drawEmoji(r.emoji, r.x, r.y, 35);
+
+            // Baguettes am Boden
+            for (let b of baguettesOnMap) drawEmoji(b.emoji, b.x, b.y, 30);
+
+            // Croissants
+            for (let p of projectiles) drawEmoji(p.emoji, p.x, p.y, 25);
+
+            // Explosionen
+            for (let exp of explosions) {
+                ctx.beginPath();
+                ctx.arc(exp.x + offsetX, exp.y + offsetY, exp.radius, 0, Math.PI * 2);
+                ctx.fillStyle = "#e74c3c";
+                ctx.fill();
+                drawEmoji("💥", exp.x, exp.y, exp.radius);
+            }
+
+            // Katzen + Leben + Freeze
+            for (let c of cats) {
+                if (c.freezeTimer > 0) {
+                    ctx.beginPath();
+                    ctx.arc(c.x + offsetX, c.y + offsetY, c.radius + 6, 0, Math.PI * 2);
+                    ctx.fillStyle = "#3498db";
+                    ctx.fill();
+                    drawEmoji("🧊", c.x - 15, c.y - 15, 20);
+                }
+
+                drawEmoji(c.emoji, c.x, c.y, 35);
+
+                // Lebensbalken angepasst an maxHp
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(c.x + offsetX - 18, c.y + offsetY - 25, 36, 6);
+                ctx.fillStyle = c.hp > (c.maxHp * 0.4) ? "#2ecc71" : "#e74c3c";
+                ctx.fillRect(c.x + offsetX - 18, c.y + offsetY - 25, Math.max(0, (c.hp / c.maxHp)) * 36, 6);
+            }
+
+            // Hund
+            if (invulnerableTimer % 10 < 5) {
+                drawEmoji(player.emoji, player.x, player.y, 40);
+            }
+
+            drawPointerToAEC();
+
+            // Game Over
+            if (gameOver) {
+                ctx.fillStyle = "#0d131a";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "white";
+                ctx.font = "bold 40px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("GAME OVER!", canvas.width / 2, canvas.height / 2 - 20);
+
+                ctx.font = "20px sans-serif";
+                ctx.fillText(`Upgrades: F-Rate Lvl ${fireRateLevel} | Explosion Lvl ${explosionLevel} | Eis Lvl ${freezeLevel}`, canvas.width / 2, canvas.height / 2 + 20);
+                ctx.fillText("Drücke F5 zum Neustarten.", canvas.width / 2, canvas.height / 2 + 60)
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
