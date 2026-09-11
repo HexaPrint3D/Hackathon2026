@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Ars Electronica Guide</title>
+  <!-- Leaflet CSS für die Karte -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 400px; width: 100%; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>Ars Electronica KI-Kompass</h2>
+  <input type="text" id="userInput" placeholder="Z. B. 'Wo gibt es Essen?' oder 'Klo'">
+  <button onclick="findNextLocation()">Suchen</button>
+
+  <div id="map"></div>
+
+  <!-- Leaflet JS für Kartenansicht -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Karte initialisieren (Zentrum: Linz)
+    const map = L.map('map').setView([48.3069, 14.2858], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    let userLat, userLng;
+
+    // 1. Standort des Nutzers abfragen
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+        
+        // Marker für den Nutzer
+        L.marker([userLat, userLng]).addTo(map)
+          .bindPopup("Du bist hier!").openPopup();
+        map.setView([userLat, userLng], 17);
+      });
+    }
+
+    // 2. Suche ausführen und KI fragen
+    async function findNextLocation() {
+      const query = document.getElementById('userInput').value;
+      
+      // KI-Anfrage senden (Server/Backend schützt deinen API-Key)
+      const response = await fetch('/api/ask-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, lat: userLat, lng: userLng })
+      });
+      
+      const result = await response.json();
+      
+      // 3. Ziel auf der Karte anzeigen
+      L.marker([result.targetLat, result.targetLng]).addTo(map)
+        .bindPopup(`<b>${result.name}</b><br>${result.description}`)
+        .openPopup();
+    }
+  </script>
+</body>
+</html>
