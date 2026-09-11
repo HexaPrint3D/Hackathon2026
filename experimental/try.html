@@ -1,63 +1,54 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Ars Electronica Guide</title>
-  <!-- Leaflet CSS für die Karte -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    #map { height: 400px; width: 100%; margin-top: 10px; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Festival Finder Linz</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  s
-f
-  <h2>Ars Electronica KI-Kompass</h2>
-  <input type="text" id="userInput" placeholder="Z. B. 'Wo gibt es Essen?' oder 'Klo'">
-  <button onclick="findNextLocation()">Suchen</button>
 
-  <div id="map"></div>
+  <div id="festival-screen" class="screen">
+    <div class="festival-shell">
+      <header class="festival-header">
+        <p class="eyebrow">Linz Festival Guide</p>
+        <h1>Welches Festival willst du besuchen?</h1>
+        <p class="helper">Wähle ein Event in Linz und starte direkt die Route.</p>
+      </header>
 
-  <!-- Leaflet JS für Kartenansicht -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    // Karte initialisieren (Zentrum: Linz)
-    const map = L.map('map').setView([48.3069, 14.2858], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      <div id="festival-list" class="festival-list" aria-live="polite"></div>
+    </div>
+  </div>
 
-    let userLat, userLng;
+  <div id="main-screen" class="screen hidden">
+    <div class="container">
+      <header>
+        <h1>Ars Electronica Kompass</h1>
+        <p>KI-Guide für Standorte, Events & Services in Linz</p>
+      </header>
 
-    // 1. Standort des Nutzers abfragen
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(position => {
-        userLat = position.coords.latitude;
-        userLng = position.coords.longitude;
-        
-        // Marker für den Nutzer
-        L.marker([userLat, userLng]).addTo(map)
-          .bindPopup("Du bist hier!").openPopup();
-        map.setView([userLat, userLng], 17);
-      });
-    }
+      <div class="card">
+        <div class="search-box">
+          <input type="text" id="userInput" placeholder="Z. B. 'Wo gibt es Essen?', 'Klo' oder 'Technik Ausstellungen'" />
+          <button type="button" onclick="searchWithAI()">Suchen</button>
+        </div>
+        <p id="status" style="margin-top: 10px;"></p>
+      </div>
 
-    // 2. Suche ausführen und KI fragen
-    async function findNextLocation() {
-      const query = document.getElementById('userInput').value;
-      
-      // KI-Anfrage senden (Server/Backend schützt deinen API-Key)
-      const response = await fetch('/api/ask-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, lat: userLat, lng: userLng })
-      });
-      
-      const result = await response.json();
-      
-      // 3. Ziel auf der Karte anzeigen
-      L.marker([result.targetLat, result.targetLng]).addTo(map)
-        .bindPopup(`<b>${result.name}</b><br>${result.description}`)
-        .openPopup();
-    }
-  </script>
+      <button id="back-to-festival" type="button" class="secondary-button">Zurück zur Festival-Auswahl</button>
+
+      <div class="card" id="result-box">
+        <h3 id="result-title">Gefundenes Ziel</h3>
+        <p id="result-desc"></p>
+      </div>
+
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
