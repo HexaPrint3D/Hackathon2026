@@ -24,3 +24,5 @@ the home page
 usefull / commands
 
 ------------------------------------------------------------------------------------------------
+<img width="1920" height="899" alt="image" src="https://github.com/user-attachments/assets/099e94d7-ee4c-459a-b11a-9db5db5f455e" />
+super fun and adicting game
