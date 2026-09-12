@@ -1,134 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Linzify</title>
-  <link rel="icon" type="image/jpeg" href="favicon.jpeg" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linzify</title>
+    <link rel="icon" type="image/jpeg" href="favicon.jpeg" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <audio id="bg-music" preload="auto" loop></audio>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
+    <div id="festival-screen" class="screen">
+      <div class="festival-shell">
+        <header class="festival-header">
+          <p class="eyebrow">Linz Festival Guide</p>
+          <h1>Which festival do you want to visit?</h1>
+          <p class="helper">Choose an event in Linz and start the route immediately.</p>
+        </header>
 
-  <div id="festival-screen" class="screen">
-    <div class="festival-shell">
-      <header class="festival-header">
-        <p class="eyebrow">Linz Festival Guide</p>
-        <h1>Which festival do you want to visit?</h1>
-        <p class="helper">Choose an event in Linz and start the route immediately.</p>
-      </header>
-
-      <div id="festival-list" class="festival-list" aria-live="polite"></div>
+        <div id="festival-list" class="festival-list" aria-live="polite"></div>
+      </div>
     </div>
-  </div>
 
-  <div id="main-screen" class="screen hidden">
-    <div class="container">
-      <header>
-        <h1>Linz Compass</h1>
-        <p>AI guide for locations, events & services in Linz</p>
-      </header>
+    <div id="main-screen" class="screen hidden">
+      <div class="container">
+        <header>
+          <h1>Linz Compass</h1>
+          <p>AI guide for locations, events &amp; services in Linz</p>
+        </header>
 
-      <div class="card">
-        <div class="search-box">
-          <input type="text" id="userInput" placeholder="            Search for stuff in Linz" aria-label="Search" />
-          <button type="button" class="search-button" onclick="searchWithAI()" aria-label="Search">
-            <span class="search-arrow" aria-hidden="true">
-              <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-                <path d="M32 10v34" stroke="white" stroke-width="6" stroke-linecap="round"/>
-                <path d="M18 26 L32 10 L46 26" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-          </button>
+        <div class="card">
+          <div class="search-box">
+            <input type="text" id="userInput" placeholder="Search for stuff in Linz" aria-label="Search" />
+            <button type="button" class="search-button" id="search-button" aria-label="Search">
+              <span class="search-arrow" aria-hidden="true">
+                <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+                  <path d="M32 10v34" stroke="white" stroke-width="6" stroke-linecap="round" />
+                  <path d="M18 26 L32 10 L46 26" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </button>
+          </div>
+          <p id="status" aria-live="polite"></p>
         </div>
-        <p id="status" style="margin-top: 10px;"></p>
-      </div>
 
-      <button id="back-to-festival" type="button" class="secondary-button">Back to festival selection</button>
-      <button id="travel-planner-toggle" type="button" class="secondary-button travel-toggle">Plan transport</button>
-
-      <div class="card" id="result-box">
-        <h3 id="result-title">Found destination</h3>
-        <p id="result-desc"></p>
-      </div>
-
-      <div id="transport-panel" class="transport-panel hidden" aria-live="polite">
-        <div class="transport-header">
-          <h3>Transport planner</h3>
-          <button type="button" id="close-transport-panel" class="close-panel" aria-label="Close transport planner">×</button>
+        <div class="button-row">
+          <button id="back-to-festival" type="button" class="secondary-button">Back to festival selection</button>
+          <button id="fullscreen-toggle" type="button" class="secondary-button">Fullscreen</button>
+          <button id="travel-planner-toggle" type="button" class="secondary-button travel-toggle">Plan transport</button>
         </div>
-        
 
-        <div class="transport-form">
-          <label>
-            <span>From</span>
-            <input id="transport-start" type="text" value="Your location" />
-          </label>
-          <label>
-            <span>To</span>
-            <input id="transport-end" type="text" value="Ars Electronica Festival" />
-          </label>
+        <div class="card" id="result-box">
+          <h3 id="result-title">Found destination</h3>
+          <p id="result-desc"></p>
+        </div>
 
-          <div class="transport-meta">
-            <label>
-              <span>Date</span>
-              <input id="transport-date" type="date" />
-            </label>
-            <label>
-              <span>Departure</span>
-              <input id="transport-time" type="time" />
-            </label>
+        <div id="transport-panel" class="transport-panel hidden" aria-live="polite">
+          <div class="transport-header">
+            <h3>Transport planner</h3>
+            <button type="button" id="close-transport-panel" class="close-panel" aria-label="Close transport planner">×</button>
           </div>
 
-          <button id="transport-search-button" class="primary-button" type="button">Search connection</button>
+          <div class="transport-form">
+            <label>
+              <span>From</span>
+              <input id="transport-start" type="text" value="Your location" />
+            </label>
+            <label>
+              <span>To</span>
+              <input id="transport-end" type="text" value="Ars Electronica Festival" />
+            </label>
+
+            <div class="transport-meta">
+              <label>
+                <span>Date</span>
+                <input id="transport-date" type="date" />
+              </label>
+              <label>
+                <span>Departure</span>
+                <input id="transport-time" type="time" />
+              </label>
+            </div>
+
+            <button id="transport-search-button" class="primary-button" type="button">Search connection</button>
+          </div>
+
+          <div id="transport-results" class="transport-results">
+            <p class="empty-state">Choose a route and compare options.</p>
+          </div>
         </div>
 
-        <div id="transport-results" class="transport-results">
-          <p class="empty-state">Choose a route and compare options.</p>
+        <div id="map"></div>
+
+        <div id="command-help" class="command-help" aria-live="polite">
+          <h4>Shortcut commands</h4>
+          <ul>
+            <li><strong>/photospot</strong> — show scenic photo spots in Linz</li>
+            <li><strong>/unspot</strong> — hide the photo spots again</li>
+            <li><strong>/sightseeing</strong> — plan a route through key scenic stops</li>
+            <li><strong>/planroute</strong> — plan a route from your location to a place</li>
+            <li><strong>/nearby</strong> — show nearby points of interest close to your current location</li>
+            <li><strong>/info</strong> — show a quick summary of the app and festival context</li>
+            <li><strong>/reset</strong> — clear all markers, routes, and overlays</li>
+            <li><strong>/coffee</strong> — find cafés, bakeries, and coffee spots</li>
+            <li><strong>/nightlife</strong> — find clubs, concerts, and evening venues</li>
+            <li><strong>/wifi</strong> — find places with Wi‑Fi or public internet access</li>
+            <li><strong>/park</strong> — find parks, green spaces, and quiet outdoor areas</li>
+            <li><strong>/family</strong> — find family-friendly and kid-friendly places</li>
+            <li><strong>/events</strong> — find festival and cultural event venues</li>
+            <li><strong>/museum</strong> — find museums, galleries, and exhibitions</li>
+          </ul>
         </div>
       </div>
+    </div>
 
-      <div id="map"></div>
+    <div id="pacman-indicator" class="pacman-indicator hidden" aria-hidden="true"></div>
 
-      <div id="command-help" class="command-help" aria-live="polite">
-        <h4>Shortcut commands</h4>
-        <ul>
-          <li><strong>/photospot</strong> — show scenic photo spots in Linz</li>
-          <li><strong>/unspot</strong> — hide the photo spots again</li>
-          <li><strong>/sightseeing</strong> — plan a route through key scenic stops</li>
-          <li><strong>/planroute</strong> — plan a route from your location to a place, e.g. /planroute Main Square, Ars Electronica</li>
-          <li><strong>/nearby</strong> — show nearby points of interest close to your current location</li>
-          <li><strong>/info</strong> — show a quick summary of the app and festival context</li>
-          <li><strong>/reset</strong> — clear all markers, routes, and overlays and return to the default Linz view</li>
-          <li><strong>/coffee</strong> — find cafés, bakeries, and coffee spots</li>
-          <li><strong>/nightlife</strong> — find clubs, concerts, and evening venues</li>
-          <li><strong>/wifi</strong> — find places with Wi‑Fi or public internet access</li>
-          <li><strong>/park</strong> — find parks, green spaces, and quiet outdoor areas</li>
-          <li><strong>/family</strong> — find family-friendly and kid-friendly places</li>
-          <li><strong>/events</strong> — find festival and cultural event venues</li>
-          <li><strong>/museum</strong> — find museums, galleries, and exhibitions</li>
-        </ul>
+    <div class="dog-button-wrap">
+      <a href="eatit.html"><button id="eat-button" class="eat-button" type="button">Let's eat it</button></a>
+      <div id="dog-eater" class="dog-eater" aria-hidden="true">
+        <span class="dog">🐶</span>
+        <span class="crumb">🥖</span>
       </div>
     </div>
-  </div>
 
-  <div id="pacman-indicator" class="pacman-indicator hidden" aria-hidden="true"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="festival-data.js"></script>
+    <script src="script.js"></script>
+    <a href="https://www.youtube.com/watch?v=Aq5WXmQQooo"><button class="rickroll-btn" type="button" aria-label="Open promotional link">Use Pro for Free</button></a>
+    
+    <a href="https://discord.gg/Tzm4T9KBr">OUR DISCORD</a>
 
-  <div class="dog-button-wrap">
-    <a href="eatit.html"><button id="eat-button" class="eat-button" type="button">Let's eat it</button></a>
-    <div id="dog-eater" class="dog-eater" aria-hidden="true">
-      <span class="dog">🐶</span>
-      <span class="crumb">🥖</span>
-    </div>
-  </div>
+    <script>
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        window.startBackgroundMusic = function startBackgroundMusic() {
+          if (!window.backgroundAudio) {
+            const context = new AudioContextClass();
+            const masterGain = context.createGain();
+            masterGain.gain.value = 0.06;
+            masterGain.connect(context.destination);
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="festival-data.js"></script>
-  <script src="script.js"></script>
-  <button class="rickroll-btn" onclick="window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')">Use Pro for Free</button>
-  <br>
-  <br>
-  <a href="https://discord.gg/Tzm4T9KBr">OUR DISCORD</a>
-</body>
+            const oscA = context.createOscillator();
+            oscA.type = 'sine';
+            oscA.frequency.value = 110;
+
+            const oscB = context.createOscillator();
+            oscB.type = 'triangle';
+            oscB.frequency.value = 220;
+
+            const modulation = context.createOscillator();
+            modulation.type = 'sine';
+            modulation.frequency.value = 0.25;
+
+            const modulationGain = context.createGain();
+            modulationGain.gain.value = 18;
+
+            const toneGain = context.createGain();
+            toneGain.gain.value = 0.08;
+
+            modulation.connect(modulationGain);
+            modulationGain.connect(oscA.frequency);
+            modulationGain.connect(oscB.frequency);
+            oscA.connect(toneGain);
+            oscB.connect(toneGain);
+            toneGain.connect(masterGain);
+
+            oscA.start();
+            oscB.start();
+            modulation.start();
+
+            window.backgroundAudio = { context, masterGain, oscA, oscB, modulation, toneGain };
+          }
+
+          if (window.backgroundAudio.context.state === 'suspended') {
+            window.backgroundAudio.context.resume().catch(() => {});
+          }
+        };
+
+        ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'].forEach((eventName) => {
+          document.addEventListener(eventName, window.startBackgroundMusic, { once: true });
+        });
+      }
+    </script>
+  </body>
 </html>

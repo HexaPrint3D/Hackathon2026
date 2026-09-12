@@ -40,17 +40,44 @@
 
 [x] add the bottom-left pacman animation trigger for slash commands
 
-[ ] add more creative / commands for future city ideas, such as /coffee, /nightlife, /wifi, /park, /family, /events, /museum
+[x] add more creative / commands for future city ideas, such as /coffee, /nightlife, /wifi, /park, /family, /events, /museum
 
-[ ] add a dedicated /info command that explains the app and the current festival context
+[x] add a dedicated /info command that explains the app and the current festival context
 
-[ ] add a /nearby command that surfaces nearby points of interest around the user's current location
+[x] add a /nearby command that surfaces nearby points of interest around the user's current location
 
-[ ] add a /favorites command to save and toggle favorite places in the current session
+[x] add a /favorites command to save and toggle favorite places in the current session
 
-[ ] add a /reset command to clear routes, pins, and overlays back to the default map state
+[x] add a /reset command to clear routes, pins, and overlays back to the default map state
 
-[ ] add an optional sound effect layer for command actions and route planning
+[x] add an optional sound effect layer for command actions and route planning
 
-[ ] add support for more map overlays and a cleaner legend for markers, routes, and emergency points
+[x] add support for more map overlays and a cleaner legend for markers, routes, and emergency points
 
+[x] add more complex animations !!!
+
+[x] make it detect when a phone or pc is using it and scale the website for it
+
+[x] make the background move a little
+
+[x] make that it automatically optimizes for phone
+
+[x] add even moore informaion about linz zb that there are 2 bakerys at the tabakfabrik (one is a honeder)
+
+[x] add in all information about freetime info (zb rotax max dome, jumpdome opr parkbad)
+
+[x] scale the game if a phone id using it and add a ui for mobile
+
+[x] ADD A GOOD PHONE UI THAT WORKS ON IPHONE AND ANDROIDE
+
+[x] MAKE THE GAME PLAYABLE ON MOBILE TOO
+
+[x] make the game fullscreenable for phone and pc
+
+[x] add sounds
+
+[x] PLEASE DO ALL OF THE todos
+
+[x] think again if you have completed all of the mentioned tasks correctly
+
+[ ] 

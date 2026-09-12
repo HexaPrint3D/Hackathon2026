@@ -94,6 +94,8 @@ window.festivalLocations = [
   { name: 'Hofer Hauptplatz', type: 'Supermarket / groceries', lat: 48.3054, lng: 14.2855, description: 'Neighborhood supermarket with easy access for last-minute groceries and refreshments.' },
   { name: 'Billa Main Square', type: 'Supermarket / groceries', lat: 48.3057, lng: 14.2868, description: 'Large supermarket just off the central square for food and everyday items.' },
   { name: 'Bakeria Linz Old Town', type: 'Bakery / breakfast', lat: 48.3060, lng: 14.2847, description: 'Fresh bakery for breakfast, coffee, and easy warm snacks before exploring the city.' },
+  { name: 'Tabakfabrik bakery – Honeder', type: 'Bakery / breakfast / local food', lat: 48.3113, lng: 14.2887, description: 'One of the bakeries around the Tabakfabrik area in Linz, known for fresh bread and local bakery favorites.' },
+  { name: 'Tabakfabrik bakery – second bakery', type: 'Bakery / coffee / local food', lat: 48.3110, lng: 14.2892, description: 'A second bakery in the Tabakfabrik district, perfect for coffee, pastries and quick city breaks.' },
   { name: 'Café Kulturzentrum', type: 'Cafe / coffee / rest', lat: 48.3046, lng: 14.2893, description: 'Good coffee and seating area close to the cultural quarter and museums.' },
   { name: 'Linz Bike Rental Center', type: 'Transport / bicycle', lat: 48.3071, lng: 14.2890, description: 'Bike rental point for moving around the city quickly and enjoying the Danube route.' },
   { name: 'City Tourist Info Linz', type: 'Information / visitor help', lat: 48.3058, lng: 14.2862, description: 'Tourist information point to get maps, tips and local recommendations in central Linz.' },
@@ -105,5 +107,8 @@ window.festivalLocations = [
   { name: 'Stadtpark Linz', type: 'Park / nature / picnic', lat: 48.3108, lng: 14.2793, description: 'Large city park with paths, greenery and an easy place to rest between activities.' },
   { name: 'Danube cycle path', type: 'Walking / cycling / scenic route', lat: 48.3001, lng: 14.2865, description: 'Scenic route along the Danube ideal for cycling, walking and taking in city views.' },
   { name: 'Linz central tram stop', type: 'Transit / mobility', lat: 48.3061, lng: 14.2869, description: 'Core tram and public transport stop for getting around Linz quickly and comfortably.' },
-  { name: 'Night market central Linz', type: 'Food / nightlife / culture', lat: 48.3050, lng: 14.2875, description: 'Popular evening venue for food, drinks and lively local atmosphere during festival time.' }
+  { name: 'Night market central Linz', type: 'Food / nightlife / culture', lat: 48.3050, lng: 14.2875, description: 'Popular evening venue for food, drinks and lively local atmosphere during festival time.' },
+  { name: 'Rotax Max Dome', type: 'Leisure / indoor activity / sport', lat: 48.2999, lng: 14.2951, description: 'Indoor karting and motorsport venue for active leisure, group fun and an exciting break from sightseeing.' },
+  { name: 'JumpDome Linz', type: 'Leisure / family / indoor fun', lat: 48.3182, lng: 14.2974, description: 'Indoor trampoline park for active leisure, family fun and energetic daytime outings in Linz.' },
+  { name: 'Parkbad Linz', type: 'Leisure / wellness / swimming', lat: 48.2984, lng: 14.2760, description: 'Public indoor and outdoor pool complex with wellness, swimming and relaxation options for all ages.' }
 ];

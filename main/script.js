@@ -17,9 +17,29 @@ let lastUserPosition = { lat: LINZ_CENTER.lat, lng: LINZ_CENTER.lng };
 let photoSpotMarkers = [];
 let emergencyMarkers = [];
 let wifiHotspotMarkers = [];
+let bakeryMarkers = [];
 let photoSpotsVisible = false;
 
 const festivalEvents = window.festivalEvents || [];
+const appState = {
+  user: { lat: LINZ_CENTER.lat, lng: LINZ_CENTER.lng },
+  selectedTarget: null,
+  routeSegments: [],
+  photoSpotsVisible: false,
+  markers: {
+    user: null,
+    target: null,
+    route: null,
+    photoSpot: [],
+    emergency: [],
+    wifi: []
+  }
+};
+
+const isMobileDevice = window.matchMedia('(max-width: 768px)').matches || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+document.body.classList.toggle('mobile-device', isMobileDevice || reduceMotion);
 
 function parseCsvLine(line) {
   const cells = [];
@@ -103,6 +123,58 @@ async function loadWifiHotspots() {
   return festivalLocations.filter(item => /wifi|hotspot|internet|library|public wifi|connectivity/i.test(`${item.name} ${item.type} ${item.description}`)).slice(0, 8);
 }
 
+function parseBakeryCsv(csvText) {
+  const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+  if (lines.length < 2) return [];
+
+  const header = parseCsvLine(lines[0]).map(item => item.trim().toLowerCase());
+  const nameIndex = header.indexOf('name');
+  const streetIndex = header.indexOf('straße');
+  const numberIndex = header.indexOf('hausnummer');
+
+  if (nameIndex === -1 || streetIndex === -1) {
+    return [];
+  }
+
+  return lines.slice(1).map(line => {
+    const values = parseCsvLine(line);
+    const name = (values[nameIndex] || '').trim();
+    const street = (values[streetIndex] || '').trim();
+    const houseNumber = numberIndex !== -1 ? (values[numberIndex] || '').trim() : '';
+
+    if (!name || !street) {
+      return null;
+    }
+
+    return {
+      name,
+      street,
+      houseNumber,
+      address: houseNumber ? `${street} ${houseNumber}` : street,
+      type: 'Bakery'
+    };
+  }).filter(Boolean);
+}
+
+async function loadBakeryContext() {
+  try {
+    const response = await fetch('data/bakery.csv');
+    if (!response.ok) {
+      throw new Error(`Bakery CSV fetch failed: ${response.status}`);
+    }
+
+    const csvText = await response.text();
+    const bakeryEntries = parseBakeryCsv(csvText);
+    if (bakeryEntries.length) {
+      return bakeryEntries;
+    }
+  } catch (error) {
+    console.warn('Could not load bakery CSV:', error);
+  }
+
+  return [];
+}
+
 async function showWifiHotspots() {
   const hotspots = await loadWifiHotspots();
 
@@ -130,6 +202,65 @@ async function showWifiHotspots() {
 
   const bounds = L.latLngBounds(hotspots.map(item => [Number(item.lat), Number(item.lng)]));
   map.fitBounds(bounds.pad(0.2), { maxZoom: 14 });
+  return true;
+}
+
+function buildBakeryMapPoints(entries) {
+  const baseLat = 48.3055;
+  const baseLng = 14.2865;
+
+  return entries.map((entry, index) => {
+    const streetText = (entry.street || '').toLowerCase();
+    const jitterLat = ((index % 7) - 3) * 0.0013;
+    const jitterLng = ((index % 5) - 2) * 0.0015;
+
+    let lat = baseLat + jitterLat;
+    let lng = baseLng + jitterLng;
+
+    if (streetText.includes('wiener')) {
+      lat = 48.3041 + ((index % 4) - 1.5) * 0.0009;
+      lng = 14.2908 + ((index % 3) - 1) * 0.0012;
+    } else if (streetText.includes('landstraße') || streetText.includes('main') || streetText.includes('haupt')) {
+      lat = 48.3064 + ((index % 6) - 2.5) * 0.0011;
+      lng = 14.2863 + ((index % 4) - 1.5) * 0.0014;
+    } else if (streetText.includes('promenade') || streetText.includes('donau') || streetText.includes('südpark')) {
+      lat = 48.3028 + ((index % 6) - 2.5) * 0.0012;
+      lng = 14.2826 + ((index % 4) - 1.5) * 0.0013;
+    }
+
+    return {
+      ...entry,
+      lat,
+      lng,
+      type: 'Bakery'
+    };
+  });
+}
+
+async function showBakeryPoints() {
+  const entries = await loadBakeryContext();
+  if (!entries.length) {
+    return false;
+  }
+
+  clearBakeryMarkers();
+  const bakeryPoints = buildBakeryMapPoints(entries).slice(0, 25);
+
+  bakeryPoints.forEach(item => {
+    const marker = L.marker([Number(item.lat), Number(item.lng)], {
+      icon: L.divIcon({
+        className: 'custom-bakery-pin',
+        html: '<div style="background:#f59e0b;border:3px solid white;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 4px rgba(245,158,11,0.2);"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      })
+    }).addTo(map).bindPopup(`<b>${item.name}</b><br>${item.address || item.street || item.type}<br><small>Bakery</small>`);
+
+    bakeryMarkers.push(marker);
+  });
+
+  const bounds = L.latLngBounds(bakeryPoints.map(item => [Number(item.lat), Number(item.lng)]));
+  map.fitBounds(bounds.pad(0.25), { maxZoom: 14 });
   return true;
 }
 
@@ -183,6 +314,27 @@ window.addEventListener('resize', () => {
   refreshMapLayout();
 });
 
+function selectFestival(eventId) {
+  const choice = festivalEvents.find(item => item.id === eventId);
+  if (!choice) return;
+
+  const mainScreen = document.getElementById('main-screen');
+  const festivalScreen = document.getElementById('festival-screen');
+
+  if (mainScreen) mainScreen.classList.remove('hidden');
+  if (festivalScreen) festivalScreen.classList.add('hidden');
+
+  setTimeout(() => refreshMapLayout(), 100);
+
+  playUiSound('success');
+  showOnMap({
+    name: choice.name,
+    lat: choice.lat,
+    lng: choice.lng,
+    description: choice.description
+  });
+}
+
 function renderFestivalCards() {
   const list = document.getElementById('festival-list');
   if (!list) return;
@@ -196,27 +348,7 @@ function renderFestivalCards() {
   `).join('');
 
   list.querySelectorAll('.festival-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const choice = festivalEvents.find(item => item.id === card.dataset.id);
-      if (!choice) return;
-
-      const mainScreen = document.getElementById('main-screen');
-      const festivalScreen = document.getElementById('festival-screen');
-      if (mainScreen) mainScreen.classList.remove('hidden');
-      if (festivalScreen) festivalScreen.classList.add('hidden');
-
-      setTimeout(() => {
-        refreshMapLayout();
-      }, 100);
-
-      playUiSound('success');
-      showOnMap({
-        name: choice.name,
-        lat: choice.lat,
-        lng: choice.lng,
-        description: choice.description
-      });
-    });
+    card.addEventListener('click', () => selectFestival(card.dataset.id));
   });
 }
 
@@ -523,6 +655,13 @@ function clearEmergencyPoints() {
   }
 }
 
+function clearBakeryMarkers() {
+  if (bakeryMarkers.length) {
+    bakeryMarkers.forEach(marker => map.removeLayer(marker));
+    bakeryMarkers = [];
+  }
+}
+
 function spawnPacmanPulse() {
   const pacman = document.getElementById('pacman-indicator');
   if (!pacman) return;
@@ -637,6 +776,13 @@ async function handleSlashCommand(query, statusEl) {
   if (command === '/wifi' || command.startsWith('/wifi ')) {
     const wifiVisible = await showWifiHotspots();
     statusEl.innerText = wifiVisible ? 'All public Wi‑Fi hotspots in Linz are visible on the map.' : 'No Wi‑Fi hotspots were found in the Linz dataset.';
+    return true;
+  }
+
+  if (command === '/bakery' || command.startsWith('/bakery ')) {
+    clearBakeryMarkers();
+    const bakeryVisible = await showBakeryPoints();
+    statusEl.innerText = bakeryVisible ? 'Bakery locations from the city CSV are visible on the map.' : 'No bakery locations were found in the CSV.';
     return true;
   }
 
@@ -863,6 +1009,7 @@ async function searchWithAI() {
   if (!query) return;
 
   triggerSearchButtonAnimation();
+  playUiSound('click');
 
   if (query.startsWith('/')) {
     const isHandled = await handleSlashCommand(query, statusEl);
@@ -873,6 +1020,7 @@ async function searchWithAI() {
 
   const cssContext = await getCssContext();
   const transportContext = await searchTransportStops(query);
+  const bakeryContext = await loadBakeryContext();
 
   const promptText = `
     You are a local guide for Linz, Austria.
@@ -885,6 +1033,9 @@ async function searchWithAI() {
 
     Available places across Linz:
     ${JSON.stringify(festivalLocations)}
+
+    Bakery dataset from the city bakery CSV:
+    ${bakeryContext.length ? JSON.stringify(bakeryContext) : 'No bakery entries available.'}
 
     Extra food and dining options in Linz:
     [
@@ -1192,6 +1343,32 @@ const closeTransportPanel = document.getElementById('close-transport-panel');
 const transportSearchButton = document.getElementById('transport-search-button');
 const eatButton = document.getElementById('eat-button');
 const dogEater = document.getElementById('dog-eater');
+const fullscreenToggle = document.getElementById('fullscreen-toggle');
+
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      if (fullscreenToggle) fullscreenToggle.textContent = 'Exit fullscreen';
+    } else {
+      await document.exitFullscreen();
+      if (fullscreenToggle) fullscreenToggle.textContent = 'Fullscreen';
+    }
+    playUiSound('success');
+  } catch (error) {
+    console.warn('Fullscreen not available:', error);
+  }
+}
+
+if (fullscreenToggle) {
+  fullscreenToggle.addEventListener('click', toggleFullscreen);
+}
+
+document.addEventListener('fullscreenchange', () => {
+  if (fullscreenToggle) {
+    fullscreenToggle.textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+  }
+});
 
 if (travelPlannerToggle) {
   travelPlannerToggle.addEventListener('click', () => {
@@ -1242,3 +1419,4 @@ if (userInput) {
 renderFestivalCards();
 setDefaultTransportForm();
 window.searchWithAI = searchWithAI;
+

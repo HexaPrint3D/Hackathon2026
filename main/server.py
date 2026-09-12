@@ -5,7 +5,9 @@ from urllib.parse import parse_qs, quote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PORT = 8000
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = int(os.environ.get("PORT", "8000"))
 
 
 def fetch_json(url, params):
@@ -173,27 +175,75 @@ def build_transport_payload(query, lat, lng):
 
 
 class AppHandler(SimpleHTTPRequestHandler):
+    def _send_json(self, payload):
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.end_headers()
+
     def do_GET(self):
         parsed = urlparse(self.path)
+        normalized_path = parsed.path or "/"
 
-        if parsed.path == "/api/transport":
+        if normalized_path == "/api/transport":
             params = parse_qs(parsed.query)
             query = params.get("query", [""])[0]
             lat = params.get("lat", ["48.3069"])[0]
             lng = params.get("lng", ["14.2858"])[0]
             payload = build_transport_payload(query, lat, lng)
-
-            body = json.dumps(payload).encode("utf-8")
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(body)
+            self._send_json(payload)
             return
 
-        if parsed.path in ("", "/"):
+        if normalized_path.startswith("/music/"):
+            relative = normalized_path[len("/music/"):]
+            music_file = os.path.normpath(os.path.join(PROJECT_ROOT, "music", relative))
+            if os.path.isfile(music_file):
+                with open(music_file, "rb") as f:
+                    data = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/mpeg")
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Cache-Control", "public, max-age=3600")
+                self.end_headers()
+                self.wfile.write(data)
+                return
+
+        root_paths = {
+            "/",
+            "/index.html",
+            "/try.html",
+            "/main",
+            "/main/",
+            "/Hackathon2026",
+            "/Hackathon2026/",
+            "/Hackathon2026/main",
+            "/Hackathon2026/main/"
+        }
+
+        if normalized_path in root_paths:
             self.path = "/try.html"
+            return super().do_GET()
+
+        if normalized_path.startswith("/api/"):
+            self.send_error(404, "File not found")
+            return
+
+        local_path = os.path.normpath(os.path.join(BASE_DIR, normalized_path.lstrip("/")))
+        if not os.path.exists(local_path) and not os.path.isdir(local_path):
+            self.path = "/try.html"
+            return super().do_GET()
 
         return super().do_GET()
 
@@ -202,7 +252,19 @@ class AppHandler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    try:
+        import socket
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        local_ip = "127.0.0.1"
+
     handler = lambda *args, **kwargs: AppHandler(*args, directory=BASE_DIR, **kwargs)
-    httpd = ThreadingHTTPServer(("0.0.0.0", PORT), handler)
+    httpd = ThreadingHTTPServer((HOST, PORT), handler)
     print(f"Transport proxy server running on http://localhost:{PORT}")
+    print(f"Network access: http://{local_ip}:{PORT}")
+    print(f"Binding host: {HOST}")
     httpd.serve_forever()

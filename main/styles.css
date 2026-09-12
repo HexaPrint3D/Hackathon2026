@@ -12,6 +12,14 @@
   --glass-shadow: 0 18px 40px rgba(13, 23, 36, 0.42), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(255,255,255,0.06);
 }
 
+body.mobile-device,
+body.mobile-device * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -854,6 +862,175 @@ button:active {
 
 .transport-panel.hidden, .hidden {
   display: none !important;
+}
+
+@media (max-width: 768px) {
+  body.mobile-device {
+    background: linear-gradient(180deg, #07131d 0%, #0a1220 28%, #09131b 100%);
+  }
+
+  body.mobile-device::before,
+  body.mobile-device::after,
+  body.mobile-device #festival-screen,
+  body.mobile-device .festival-shell,
+  body.mobile-device .festival-header,
+  body.mobile-device #festival-list,
+  body.mobile-device .festival-card,
+  body.mobile-device .container,
+  body.mobile-device .card,
+  body.mobile-device .search-box,
+  body.mobile-device #map,
+  body.mobile-device .transport-panel,
+  body.mobile-device .command-help,
+  body.mobile-device .pacman-indicator,
+  body.mobile-device .dog-eater,
+  body.mobile-device .search-button,
+  body.mobile-device .search-arrow,
+  body.mobile-device .route-option,
+  body.mobile-device #result-box {
+    animation: none !important;
+  }
+
+  body.mobile-device .festival-card::before,
+  body.mobile-device .search-button::before,
+  body.mobile-device .search-button::after,
+  body.mobile-device .dog-eater .crumb,
+  body.mobile-device #map::before {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  body.mobile-device .festival-card,
+  body.mobile-device .card,
+  body.mobile-device .search-button,
+  body.mobile-device button,
+  body.mobile-device .leaflet-container,
+  body.mobile-device .transport-panel {
+    transition: none !important;
+  }
+
+  body.mobile-device .festival-card:hover,
+  body.mobile-device .festival-card:active,
+  body.mobile-device .festival-card::before,
+  body.mobile-device .festival-shell,
+  body.mobile-device .festival-header,
+  body.mobile-device button:hover,
+  body.mobile-device button:active,
+  body.mobile-device .search-button:hover,
+  body.mobile-device .search-button:active .search-arrow,
+  body.mobile-device .search-button.is-launching .search-arrow,
+  body.mobile-device .card:hover,
+  body.mobile-device .leaflet-container:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+
+  body.mobile-device .festival-card,
+  body.mobile-device #festival-screen,
+  body.mobile-device .festival-shell,
+  body.mobile-device .festival-header {
+    animation-delay: 0s !important;
+  }
+
+  body.mobile-device .festival-card {
+    background-size: auto !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  body.mobile-device .festival-shell {
+    padding: 8px 0 20px;
+  }
+
+  body.mobile-device .festival-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  body.mobile-device .festival-card {
+    padding: 16px;
+    min-height: 120px;
+  }
+
+  body.mobile-device .container {
+    gap: 12px;
+    width: 100%;
+  }
+
+  body.mobile-device .card,
+  body.mobile-device .transport-panel,
+  body.mobile-device .command-help {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  body.mobile-device #map {
+    height: 300px;
+    border-radius: 18px;
+  }
+
+  body.mobile-device .search-box {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  body.mobile-device input[type="text"] {
+    min-width: 0;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  body.mobile-device button,
+  body.mobile-device .secondary-button,
+  body.mobile-device .primary-button,
+  body.mobile-device .search-button {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 0.92rem;
+  }
+
+  body.mobile-device .search-button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  body.mobile-device .transport-meta {
+    grid-template-columns: 1fr;
+  }
+
+  body.mobile-device .dog-button-wrap {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  body.mobile-device .pacman-indicator {
+    left: 12px;
+    bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  body.mobile-device {
+    padding: 10px 10px 20px;
+  }
+
+  body.mobile-device header h1 {
+    font-size: 1.7rem;
+  }
+
+  body.mobile-device .festival-header h1 {
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+  }
+
+  body.mobile-device .helper,
+  body.mobile-device .command-help ul,
+  body.mobile-device #status {
+    font-size: 0.8rem;
+  }
 }
 
 a {
