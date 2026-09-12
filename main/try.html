@@ -9,7 +9,10 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <audio id="bg-music" preload="auto" loop></audio>
+     <audio id="bg-music">
+        <source src="Mojntage Ultraanivaa.mp3" type="audio/mpeg">
+      </audio>
+
 
     <div id="festival-screen" class="screen">
       <div class="festival-shell">
@@ -48,7 +51,6 @@
         <div class="button-row">
           <button id="back-to-festival" type="button" class="secondary-button">Back to festival selection</button>
           <button id="fullscreen-toggle" type="button" class="secondary-button">Fullscreen</button>
-          <button id="travel-planner-toggle" type="button" class="secondary-button travel-toggle">Plan transport</button>
         </div>
 
         <div class="card" id="result-box">

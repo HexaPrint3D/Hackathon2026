@@ -36,6 +36,17 @@ const appState = {
   }
 };
 
+function startAudio() {
+    const audio = document.getElementById('bg-music');
+    audio.play().then(() => {
+    // Erfolgreich abgespielt -> Event-Listener entfernen
+      document.removeEventListener('click', startAudio);
+      }).catch(error => {
+      console.log("Autoplay von Browser blockiert, warte auf Interaktion:", error);
+    });
+}
+ document.addEventListener('click', startAudio);
+
 const isMobileDevice = window.matchMedia('(max-width: 768px)').matches || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
