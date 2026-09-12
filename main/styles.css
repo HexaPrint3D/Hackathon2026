@@ -69,8 +69,11 @@ body::before {
   inset: 0;
   background-image:
     linear-gradient(rgba(255,255,255,0.017) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.017) 1px, transparent 1px);
-  background-size: 26px 26px;
+    linear-gradient(90deg, rgba(255,255,255,0.017) 1px, transparent 1px),
+    radial-gradient(ellipse at 16% 22%, rgba(145, 205, 255, 0.22), transparent 9%),
+    radial-gradient(ellipse at 80% 28%, rgba(177, 160, 255, 0.18), transparent 11%),
+    radial-gradient(ellipse at 52% 72%, rgba(130, 180, 255, 0.12), transparent 16%);
+  background-size: 26px 26px, 26px 26px, 100% 100%, 100% 100%, 100% 100%;
   mask-image: radial-gradient(circle at center, black 32%, transparent 100%);
   animation: gridMove 18s linear infinite;
   pointer-events: none;
@@ -249,14 +252,14 @@ body::before {
 }
 
 .festival-card:hover {
-  transform: translateY(-10px) scale(1.05);
+  transform: perspective(900px) rotateX(-10deg) rotateY(8deg) translateY(-10px) scale(1.05);
   border-color: rgba(0, 240, 255, 0.8);
   box-shadow: 0 20px 40px rgba(0, 240, 255, 0.22), 0 0 32px rgba(168, 85, 247, 0.24);
   filter: brightness(1.12) saturate(1.1);
 }
 
 .festival-card:active {
-  transform: translateY(-4px) scale(1.02);
+  transform: perspective(900px) rotateX(-6deg) rotateY(4deg) translateY(-4px) scale(1.02);
 }
 
 .festival-card .tag {
@@ -644,6 +647,34 @@ button:active {
   gap: 10px;
 }
 
+.command-help {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: var(--text-dim);
+}
+
+.command-help h4 {
+  margin-bottom: 8px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.command-help ul {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 0.84rem;
+}
+
+.command-help strong {
+  color: var(--accent-color);
+}
+
 .route-option {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.12);
@@ -724,6 +755,39 @@ button:active {
   color: var(--text-dim);
 }
 
+.pacman-indicator {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #facc15;
+  box-shadow: inset 8px 0 0 rgba(255,255,255,0.2);
+  transform-origin: center;
+  animation: pacmanChomp 0.25s linear infinite;
+  z-index: 15;
+}
+
+.pacman-indicator.hidden {
+  display: none;
+}
+
+.pacman-indicator.is-eating {
+  animation: pacmanChomp 0.25s linear infinite, pacmanGlide 0.7s ease-out;
+}
+
+@keyframes pacmanChomp {
+  0%, 100% { clip-path: polygon(50% 50%, 100% 10%, 100% 90%, 50% 50%); }
+  50% { clip-path: polygon(50% 50%, 100% 50%, 100% 50%, 50% 50%); }
+}
+
+@keyframes pacmanGlide {
+  0% { transform: translateX(-10px) scale(0.7); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(26px) scale(1); opacity: 0; }
+}
+
 .dog-button-wrap {
   position: fixed;
   right: 18px;
@@ -792,3 +856,7 @@ button:active {
   display: none !important;
 }
 
+a {
+  color:white;
+
+}

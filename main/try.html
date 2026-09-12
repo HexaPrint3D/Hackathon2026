@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Festival Finder Linz</title>
+  <title>Linzify</title>
+  <link rel="icon" type="image/jpeg" href="favicon.jpeg" />
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="styles.css" />
@@ -57,6 +58,7 @@
           <h3>Transport planner</h3>
           <button type="button" id="close-transport-panel" class="close-panel" aria-label="Close transport planner">×</button>
         </div>
+        
 
         <div class="transport-form">
           <label>
@@ -88,8 +90,30 @@
       </div>
 
       <div id="map"></div>
+
+      <div id="command-help" class="command-help" aria-live="polite">
+        <h4>Shortcut commands</h4>
+        <ul>
+          <li><strong>/photospot</strong> — show scenic photo spots in Linz</li>
+          <li><strong>/unspot</strong> — hide the photo spots again</li>
+          <li><strong>/sightseeing</strong> — plan a route through key scenic stops</li>
+          <li><strong>/planroute</strong> — plan a route from your location to a place, e.g. /planroute Main Square, Ars Electronica</li>
+          <li><strong>/nearby</strong> — show nearby points of interest close to your current location</li>
+          <li><strong>/info</strong> — show a quick summary of the app and festival context</li>
+          <li><strong>/reset</strong> — clear all markers, routes, and overlays and return to the default Linz view</li>
+          <li><strong>/coffee</strong> — find cafés, bakeries, and coffee spots</li>
+          <li><strong>/nightlife</strong> — find clubs, concerts, and evening venues</li>
+          <li><strong>/wifi</strong> — find places with Wi‑Fi or public internet access</li>
+          <li><strong>/park</strong> — find parks, green spaces, and quiet outdoor areas</li>
+          <li><strong>/family</strong> — find family-friendly and kid-friendly places</li>
+          <li><strong>/events</strong> — find festival and cultural event venues</li>
+          <li><strong>/museum</strong> — find museums, galleries, and exhibitions</li>
+        </ul>
+      </div>
     </div>
   </div>
+
+  <div id="pacman-indicator" class="pacman-indicator hidden" aria-hidden="true"></div>
 
   <div class="dog-button-wrap">
     <a href="eatit.html"><button id="eat-button" class="eat-button" type="button">Let's eat it</button></a>
@@ -103,5 +127,8 @@
   <script src="festival-data.js"></script>
   <script src="script.js"></script>
   <button class="rickroll-btn" onclick="window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')">Use Pro for Free</button>
+  <br>
+  <br>
+  <a href="https://discord.gg/Tzm4T9KBr">OUR DISCORD</a>
 </body>
 </html>

@@ -4,16 +4,53 @@
 
 [x] add more layered, calming animations to the landing screen and cards
 
-[x] make that when you plan a transport it shows the route and bus number on the map, using the real departure data from the API
+[x] make it show transport routes and bus information on the map using live departure data from the API
 
-[x] make the festival-selection buttons grow much more on select and polish the search arrow animationtle more complex
+[x] polish the festival selection, hover states, and search arrow animation
 
-add when you ask the ai and put in the code /photospot that it shows you all the photospots in linz and when you type /unspot it hides them again
+[x] add the /photospot command to show scenic photo spots in Linz and /unspot to hide them again
 
-add a feature when you write /sighhtseeing the ai plans a rout where you come across all the spots you mention after the command
+[x] add the /sightseeing command to plan a route through matching scenic stops
 
-add the code /planroute (where you are), (where you wanna go) and it plans a route to the spot you wanna go and shows the route on the map with a red line
+[x] add /planroute to create a route from your location to a target place, shown as a red line on the map
 
-add too that you see a
+[x] add the command-help list under the map that explains all slash commands
 
-make the arrow animation 
+[x] make the search arrow animation use a bow-like pullback and launch effect
+
+[x] add subtle ambient silhouettes in the background for a stronger city mood and visual depth
+
+[x] make the festival-selection buttons tilt backward on hover for a stronger interactive feel
+
+[x] add the /emergency command to show emergency and medical points in Linz
+
+[x] add the /bus command to plan a route with live stop data and bus route information
+
+[x] add a pacman-style trigger for slash commands so they feel playful and animated
+
+[x] add inverse /un... commands to hide or remove the generated overlays again
+
+[x] make the app usable on mobile devices as well as desktop
+
+[x] make the festival selection react to the chosen event and anchor the location on the map
+
+[x] finalize the command-based interaction flow and visual polish for the current version
+
+[x] add all current slash commands to the visible help list
+
+[x] add the bottom-left pacman animation trigger for slash commands
+
+[ ] add more creative / commands for future city ideas, such as /coffee, /nightlife, /wifi, /park, /family, /events, /museum
+
+[ ] add a dedicated /info command that explains the app and the current festival context
+
+[ ] add a /nearby command that surfaces nearby points of interest around the user's current location
+
+[ ] add a /favorites command to save and toggle favorite places in the current session
+
+[ ] add a /reset command to clear routes, pins, and overlays back to the default map state
+
+[ ] add an optional sound effect layer for command actions and route planning
+
+[ ] add support for more map overlays and a cleaner legend for markers, routes, and emergency points
+

@@ -14,8 +14,124 @@ let userMarker, targetMarker, routeLine;
 let routeSegments = [];
 let selectedTarget = null;
 let lastUserPosition = { lat: LINZ_CENTER.lat, lng: LINZ_CENTER.lng };
+let photoSpotMarkers = [];
+let emergencyMarkers = [];
+let wifiHotspotMarkers = [];
+let photoSpotsVisible = false;
 
 const festivalEvents = window.festivalEvents || [];
+
+function parseCsvLine(line) {
+  const cells = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      cells.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  cells.push(current.trim());
+  return cells;
+}
+
+function parseWifiHotspotsCsv(csvText) {
+  const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+  if (lines.length < 2) return [];
+
+  const header = parseCsvLine(lines[0]).map(item => item.trim().toLowerCase());
+  const indexes = {
+    name: header.indexOf('name'),
+    lat: header.indexOf('lat'),
+    lon: header.indexOf('lon'),
+    address: header.indexOf('adresse')
+  };
+
+  if (indexes.name === -1 || indexes.lat === -1 || indexes.lon === -1) {
+    return [];
+  }
+
+  return lines.slice(1).map(line => {
+    const values = parseCsvLine(line);
+    const name = values[indexes.name] || 'Wi‑Fi hotspot';
+    const lat = Number(values[indexes.lat]);
+    const lon = Number(values[indexes.lon]);
+    const address = values[indexes.address] || '';
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return null;
+    }
+
+    return {
+      name,
+      type: 'Wi‑Fi hotspot',
+      lat,
+      lng: lon,
+      description: address ? `Public Wi‑Fi hotspot in Linz at ${address}.` : 'Public Wi‑Fi hotspot in Linz.'
+    };
+  }).filter(Boolean);
+}
+
+async function loadWifiHotspots() {
+  try {
+    const response = await fetch('data/Hotspot-Standorte.csv');
+    if (!response.ok) {
+      throw new Error(`CSV fetch failed: ${response.status}`);
+    }
+
+    const csvText = await response.text();
+    const hotspots = parseWifiHotspotsCsv(csvText);
+    if (hotspots.length) {
+      return hotspots;
+    }
+  } catch (error) {
+    console.warn('Could not load Wi‑Fi hotspots CSV:', error);
+  }
+
+  return festivalLocations.filter(item => /wifi|hotspot|internet|library|public wifi|connectivity/i.test(`${item.name} ${item.type} ${item.description}`)).slice(0, 8);
+}
+
+async function showWifiHotspots() {
+  const hotspots = await loadWifiHotspots();
+
+  if (wifiHotspotMarkers.length) {
+    wifiHotspotMarkers.forEach(marker => map.removeLayer(marker));
+    wifiHotspotMarkers = [];
+  }
+
+  if (!hotspots.length) {
+    return false;
+  }
+
+  hotspots.forEach(item => {
+    const marker = L.marker([Number(item.lat), Number(item.lng)], {
+      icon: L.divIcon({
+        className: 'custom-wifi-pin',
+        html: '<div style="background:#38bdf8;border:3px solid white;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 4px rgba(56,189,248,0.2);"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      })
+    }).addTo(map).bindPopup(`<b>${item.name}</b><br>${item.description || item.type || 'Public Wi‑Fi hotspot'}`);
+
+    wifiHotspotMarkers.push(marker);
+  });
+
+  const bounds = L.latLngBounds(hotspots.map(item => [Number(item.lat), Number(item.lng)]));
+  map.fitBounds(bounds.pad(0.2), { maxZoom: 14 });
+  return true;
+}
 
 function playUiSound(type = 'click') {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -143,7 +259,7 @@ function isValidLatLngObject(target) {
   return !!target && Number.isFinite(Number(target.lat)) && Number.isFinite(Number(target.lng));
 }
 
-async function drawRouteToTarget(target) {
+async function drawRouteToTarget(target, routeColor = '#00f0ff') {
   if (!isValidLatLngObject(target) || !Number.isFinite(userLat) || !Number.isFinite(userLng)) return;
 
   const lat = Number(target.lat);
@@ -168,7 +284,7 @@ async function drawRouteToTarget(target) {
 
     clearRoute();
     routeLine = L.polyline(routeCoordinates, {
-      color: '#00f0ff',
+      color: routeColor,
       weight: 5,
       opacity: 0.9,
       dashArray: '10, 12'
@@ -185,7 +301,7 @@ async function drawRouteToTarget(target) {
       [userLat, userLng],
       [target.lat, target.lng]
     ], {
-      color: '#00f0ff',
+      color: routeColor,
       weight: 5,
       opacity: 0.9,
       dashArray: '10, 12'
@@ -379,6 +495,367 @@ async function searchTransportStops(query) {
   }
 }
 
+function findLocationByText(text) {
+  const target = (text || '').trim();
+  if (!target) return null;
+
+  const normalized = target.toLowerCase();
+  const matched = festivalLocations.find(item => {
+    const haystack = `${item.name || ''} ${item.type || ''} ${item.description || ''}`.toLowerCase();
+    return haystack.includes(normalized);
+  });
+
+  return matched || null;
+}
+
+function clearPhotoSpots() {
+  if (photoSpotMarkers.length) {
+    photoSpotMarkers.forEach(marker => map.removeLayer(marker));
+    photoSpotMarkers = [];
+  }
+  photoSpotsVisible = false;
+}
+
+function clearEmergencyPoints() {
+  if (emergencyMarkers.length) {
+    emergencyMarkers.forEach(marker => map.removeLayer(marker));
+    emergencyMarkers = [];
+  }
+}
+
+function spawnPacmanPulse() {
+  const pacman = document.getElementById('pacman-indicator');
+  if (!pacman) return;
+
+  pacman.classList.remove('hidden');
+  pacman.classList.add('is-eating');
+  setTimeout(() => {
+    pacman.classList.remove('is-eating');
+    pacman.classList.add('hidden');
+  }, 700);
+}
+
+function showPhotoSpots() {
+  clearPhotoSpots();
+
+  const interestingSpots = festivalLocations.filter(item => {
+    const text = `${item.name || ''} ${item.type || ''} ${item.description || ''}`.toLowerCase();
+    return /view|panorama|castle|museum|park|old town|heritage|landmark|bridge|lookout|square|plaza|river|church/i.test(text);
+  }).slice(0, 6);
+
+  if (!interestingSpots.length) return false;
+
+  interestingSpots.forEach(item => {
+    const marker = L.marker([Number(item.lat), Number(item.lng)], {
+      icon: L.divIcon({
+        className: 'custom-photo-pin',
+        html: '<div style="background:#fbbf24;border:3px solid white;border-radius:50%;width:16px;height:16px;box-shadow:0 0 0 4px rgba(251,191,36,0.2);"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      })
+    }).addTo(map)
+      .bindPopup(`<b>${item.name}</b><br>${item.description || item.type || 'Photo spot in Linz'}`);
+
+    photoSpotMarkers.push(marker);
+  });
+
+  photoSpotsVisible = true;
+  const bounds = L.latLngBounds(interestingSpots.map(item => [Number(item.lat), Number(item.lng)]));
+  map.fitBounds(bounds.pad(0.25), { maxZoom: 14 });
+  return true;
+}
+
+function resetMapState() {
+  clearPhotoSpots();
+  clearEmergencyPoints();
+  clearRoute();
+
+  if (targetMarker) {
+    map.removeLayer(targetMarker);
+    targetMarker = null;
+  }
+
+  selectedTarget = null;
+  const resultTitle = document.getElementById('result-title');
+  const resultDesc = document.getElementById('result-desc');
+  if (resultTitle) resultTitle.innerText = 'Found destination';
+  if (resultDesc) resultDesc.innerText = '';
+
+  map.setView([LINZ_CENTER.lat, LINZ_CENTER.lng], 13);
+}
+
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = value => (value * Math.PI) / 180;
+  const earthRadius = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * earthRadius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function findCategoryMatches(categoryKey, keywordText = '') {
+  const keywordLower = (keywordText || '').trim().toLowerCase();
+  const categoryMaps = {
+    coffee: ['coffee', 'cafe', 'bakery', 'espresso', 'breakfast', 'restaurant', 'pizza', 'food'],
+    nightlife: ['nightlife', 'club', 'concert', 'music', 'late night', 'events', 'bar'],
+    wifi: ['wifi', 'free wifi', 'internet', 'connectivity', 'wifi hotspot', 'library', 'public wifi'],
+    park: ['park', 'garden', 'green space', 'nature', 'walking', 'playground', 'riverfront'],
+    family: ['family', 'playground', 'kids', 'child', 'park', 'museum', 'green space', 'fun'],
+    events: ['festival', 'event', 'culture', 'music', 'concert', 'summer', 'nightline'],
+    museum: ['museum', 'art', 'exhibition', 'culture', 'heritage', 'gallery']
+  };
+
+  const terms = categoryMaps[categoryKey] || [];
+  const matches = festivalLocations.filter(item => {
+    const haystack = `${item.name || ''} ${item.type || ''} ${item.description || ''}`.toLowerCase();
+    const matchesCategory = terms.some(term => haystack.includes(term));
+    const matchesKeyword = !keywordLower || haystack.includes(keywordLower);
+    return matchesCategory && matchesKeyword;
+  });
+
+  return matches.slice(0, 5);
+}
+
+async function handleSlashCommand(query, statusEl) {
+  const command = query.trim();
+  spawnPacmanPulse();
+
+  if (command === '/reset' || command === '/clear') {
+    resetMapState();
+    statusEl.innerText = 'Map reset to the default Linz overview.';
+    return true;
+  }
+
+  if (command === '/info' || command === '/about') {
+    statusEl.innerText = 'Linz Compass helps you discover festivals, nearby places, routes, and transport in Linz.';
+    return true;
+  }
+
+  if (command === '/wifi' || command.startsWith('/wifi ')) {
+    const wifiVisible = await showWifiHotspots();
+    statusEl.innerText = wifiVisible ? 'All public Wi‑Fi hotspots in Linz are visible on the map.' : 'No Wi‑Fi hotspots were found in the Linz dataset.';
+    return true;
+  }
+
+  if (command === '/nearby' || command.startsWith('/nearby ')) {
+    const keyword = command.replace(/^\/nearby\s*/i, '').trim();
+    const nearby = festivalLocations
+      .filter(item => item && Number(item.lat) && Number(item.lng))
+      .map(item => ({
+        ...item,
+        distanceKm: getDistanceKm(userLat, userLng, Number(item.lat), Number(item.lng))
+      }))
+      .filter(item => item.distanceKm <= 3)
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+
+    const filtered = keyword
+      ? nearby.filter(item => `${item.name} ${item.type} ${item.description}`.toLowerCase().includes(keyword.toLowerCase()))
+      : nearby;
+
+    if (!filtered.length) {
+      statusEl.innerText = 'No nearby places were found within 3 km of you.';
+      return true;
+    }
+
+    const target = filtered[0];
+    showOnMap({ ...target, routeMode: 'drive', description: `Nearby spot in Linz: ${target.description || target.type || 'Local attraction'}` });
+    statusEl.innerText = `Found ${filtered.length} nearby place${filtered.length > 1 ? 's' : ''} around your location.`;
+    return true;
+  }
+
+  const categoryCommands = [
+    {
+      names: ['/coffee', '/cafe'],
+      label: 'Coffee',
+      key: 'coffee',
+      description: 'Coffee and food stop in Linz.'
+    },
+    {
+      names: ['/nightlife', '/club', '/bar'],
+      label: 'Nightlife',
+      key: 'nightlife',
+      description: 'Nightlife and evening spots in Linz.'
+    },
+    {
+      names: ['/wifi', '/internet'],
+      label: 'Wi‑Fi',
+      key: 'wifi',
+      description: 'Places with internet access and digital help.'
+    },
+    {
+      names: ['/park', '/green', '/nature'],
+      label: 'Park',
+      key: 'park',
+      description: 'A green park or nature place in Linz.'
+    },
+    {
+      names: ['/family', '/kids'],
+      label: 'Family',
+      key: 'family',
+      description: 'Family-friendly place in Linz.'
+    },
+    {
+      names: ['/events', '/festival', '/culture'],
+      label: 'Events',
+      key: 'events',
+      description: 'Upcoming event or cultural venue in Linz.'
+    },
+    {
+      names: ['/museum', '/gallery', '/art'],
+      label: 'Museum',
+      key: 'museum',
+      description: 'Museum or cultural exhibition in Linz.'
+    }
+  ];
+
+  for (const category of categoryCommands) {
+    const matchedName = category.names.find(name => command === name || command.startsWith(`${name} `));
+    if (!matchedName) continue;
+
+    const keyword = command.replace(new RegExp(`^${matchedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i'), '').trim();
+    const matches = findCategoryMatches(category.key, keyword);
+
+    if (!matches.length) {
+      statusEl.innerText = `No ${category.label.toLowerCase()} options were found in Linz.`;
+      return true;
+    }
+
+    const target = matches[0];
+    showOnMap({
+      ...target,
+      routeMode: 'drive',
+      description: `${category.description} ${target.description || ''}`
+    });
+    statusEl.innerText = `${category.label} spot found in Linz.`;
+    return true;
+  }
+
+  if (command === '/unspot' || command === '/unphotospot') {
+    clearPhotoSpots();
+    statusEl.innerText = 'Photo spots hidden.';
+    return true;
+  }
+
+  if (command === '/unemergency') {
+    clearEmergencyPoints();
+    statusEl.innerText = 'Emergency markers hidden.';
+    return true;
+  }
+
+  if (command === '/photospot' || command.startsWith('/photospot ')) {
+    if (showPhotoSpots()) {
+      statusEl.innerText = 'Showing photo spots across Linz.';
+    } else {
+      statusEl.innerText = 'No photo spots were found.';
+    }
+    return true;
+  }
+
+  if (command === '/emergency' || command.startsWith('/emergency ')) {
+    clearEmergencyPoints();
+    const matches = festivalLocations.filter(item => /hospital|clinic|ambulance|emergency|aed|defibrillator|health|medical/i.test(`${item.name} ${item.type} ${item.description}`)).slice(0, 8);
+    if (!matches.length) {
+      statusEl.innerText = 'No emergency locations found.';
+      return true;
+    }
+
+    matches.forEach(item => {
+      const marker = L.marker([Number(item.lat), Number(item.lng)], {
+        icon: L.divIcon({
+          className: 'custom-emergency-pin',
+          html: '<div style="background:#ef4444;border:3px solid white;border-radius:50%;width:16px;height:16px;box-shadow:0 0 0 4px rgba(239,68,68,0.2);"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).addTo(map).bindPopup(`<b>${item.name}</b><br>${item.description || item.type || 'Emergency point'}`);
+
+      emergencyMarkers.push(marker);
+    });
+
+    map.fitBounds(L.latLngBounds(matches.map(item => [Number(item.lat), Number(item.lng)])), { maxZoom: 14 });
+    statusEl.innerText = 'Emergency locations are visible.';
+    return true;
+  }
+
+  if (command.startsWith('/bus')) {
+    const busTarget = command.replace(/^\/bus\s*/i, '').trim();
+    const endTarget = findLocationByText(busTarget) || selectedTarget || festivalLocations.find(item => /ars electronica|main square|main plaza|center/i.test(`${item.name} ${item.type}`)) || festivalLocations[0];
+
+    if (!endTarget) {
+      statusEl.innerText = 'I could not find a route target for the bus command.';
+      return true;
+    }
+
+    const target = { ...endTarget, description: `Bus route towards ${endTarget.name}.`, routeMode: 'transit' };
+    const transportContext = await searchTransportStops(endTarget.name || 'bus');
+    if (transportContext && transportContext.stops?.length) {
+      target.nearestTransitStop = transportContext.stops[0];
+      target.transitLine = getBestDepartureInfo(transportContext)?.line || 'Bus';
+    }
+    showOnMap(target);
+    statusEl.innerText = 'Bus route planned with live stop data.';
+    return true;
+  }
+
+  if (command.startsWith('/sightseeing') || command.startsWith('/sighhtseeing')) {
+    const suffix = command.replace(/^\/sighhtseeing|^\/sightseeing/i, '').trim();
+    const searchTerms = suffix ? suffix.split(/\s+/).slice(0, 6).join(' ') : 'viewpoint,castle,park';
+    const matches = festivalLocations.filter(item => {
+      const haystack = `${item.name || ''} ${item.type || ''} ${item.description || ''}`.toLowerCase();
+      return haystack.includes(searchTerms.toLowerCase()) || /view|castle|museum|park|old town|heritage|landmark|lookout|square/i.test(haystack);
+    }).slice(0, 4);
+
+    if (!matches.length) {
+      statusEl.innerText = 'No sightseeing route could be created.';
+      return true;
+    }
+
+    const routePoints = [[userLat, userLng], ...matches.map(item => [Number(item.lat), Number(item.lng)])];
+    clearRoute();
+    routeLine = L.polyline(routePoints, {
+      color: '#a78bfa',
+      weight: 5,
+      opacity: 0.9,
+      dashArray: '5, 10'
+    }).addTo(map);
+
+    map.fitBounds(L.latLngBounds(routePoints), { maxZoom: 14 });
+    statusEl.innerText = 'Sightseeing route planned.';
+    return true;
+  }
+
+  if (command.startsWith('/planroute')) {
+    const suffix = command.replace(/^\/planroute/i, '').trim();
+    const routeParts = suffix.split(/\s*(?:,|->| to )\s*/i).map(part => part.trim()).filter(Boolean);
+    const fromText = routeParts[0] && routeParts[0].toLowerCase() !== 'where you are' ? routeParts[0] : 'your location';
+    const toText = routeParts[1] || routeParts[0] || 'ars electronica';
+
+    const startTarget = fromText === 'your location' ? { lat: userLat, lng: userLng } : findLocationByText(fromText) || { lat: userLat, lng: userLng };
+    const endTarget = findLocationByText(toText) || selectedTarget || festivalLocations[0];
+
+    if (!endTarget) {
+      statusEl.innerText = 'I could not find a destination for that route.';
+      return true;
+    }
+
+    const target = {
+      ...endTarget,
+      name: endTarget.name,
+      description: `Route from ${fromText} to ${endTarget.name}.`,
+      routeMode: 'route-plan'
+    };
+
+    showOnMap(target);
+    statusEl.innerText = 'Route planned with red line.';
+    return true;
+  }
+
+  return false;
+}
+
 async function searchWithAI() {
   const query = document.getElementById('userInput').value.trim();
   const statusEl = document.getElementById('status');
@@ -386,6 +863,12 @@ async function searchWithAI() {
   if (!query) return;
 
   triggerSearchButtonAnimation();
+
+  if (query.startsWith('/')) {
+    const isHandled = await handleSlashCommand(query, statusEl);
+    if (isHandled) return;
+  }
+
   statusEl.innerText = 'The AI is processing your request...';
 
   const cssContext = await getCssContext();
@@ -502,6 +985,11 @@ function showOnMap(target) {
 
   if (target.routeMode === 'transit' && target.nearestTransitStop) {
     drawTransitRouteToTarget(target);
+    return;
+  }
+
+  if (target.routeMode === 'route-plan') {
+    drawRouteToTarget(target, '#ef4444');
     return;
   }
 
